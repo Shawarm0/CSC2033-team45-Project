@@ -1,5 +1,3 @@
-import java.util.Properties
-
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -40,10 +38,6 @@ android {
                 "proguard-rules.pro"
             )
         }
-        debug {
-            buildConfigField("String","API_KEY","\"${localProperties.getProperty("API_KEY")}\"")
-            buildConfigField("String","SUPABASE_URL","\"${localProperties.getProperty("SUPABASE_URL")}\"")
-        }
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -56,6 +50,8 @@ android {
 }
 
 dependencies {
+
+    implementation(libs.androidx.compose.animation.core)
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
     // Supabase Version
     var supabaseVersion = "3.0.0"
@@ -67,6 +63,10 @@ dependencies {
     implementation("io.github.jan-tennert.supabase:realtime-kt")
     implementation("io.ktor:ktor-client-okhttp:$ktorVersion")
 
+
+
+    // This is to get the icons imported
+    implementation("androidx.compose.material:material-icons-extended:1.7.8")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
