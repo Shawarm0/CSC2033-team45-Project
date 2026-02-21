@@ -41,6 +41,7 @@ android {
 
 dependencies {
 
+    implementation(libs.androidx.compose.animation.core)
     // Supabase Version
     var supabaseVersion = "3.0.0"
     var ktorVersion = "3.0.0-rc-1"
@@ -51,6 +52,10 @@ dependencies {
     implementation("io.github.jan-tennert.supabase:realtime-kt")
     implementation("io.ktor:ktor-client-okhttp:$ktorVersion")
 
+
+
+    // This is to get the icons imported
+    implementation("androidx.compose.material:material-icons-extended:1.7.8")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
