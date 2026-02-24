@@ -5,6 +5,13 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.interaction.HoverInteraction
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -17,13 +24,23 @@ import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Place
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
 import com.team45.mysustainablecity.ui.components.BottomBar
+import com.team45.mysustainablecity.ui.screens.AlertScreen
+import com.team45.mysustainablecity.ui.screens.DiscoverScreen
+import com.team45.mysustainablecity.ui.screens.HomeScreen
+import com.team45.mysustainablecity.ui.screens.LoginScreen
 import com.team45.mysustainablecity.ui.theme.Background
 import com.team45.mysustainablecity.ui.theme.MySustainableCityTheme
 
@@ -38,27 +55,8 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             MySustainableCityTheme {
-                Scaffold(
-                    modifier = Modifier.fillMaxSize(),
-                    containerColor = Background,
-                    bottomBar = {
-                        var selectedScreen by remember { mutableStateOf("home") }
-
-                        BottomBar(
-                            selectedScreen = selectedScreen,
-                            onScreenSelected = { screen ->
-                                selectedScreen = screen.route
-                            }
-                        )
-                    }
-                ) { innerpadding ->
-
-                    Column(
-                        modifier = Modifier.padding(innerpadding)
-                    ) {
-                        Text("Screen Text")
-                    }
-                }
+                val rootNavController = rememberNavController()
+                AppNavigation(rootNavController)
             }
         }
     }
@@ -139,4 +137,115 @@ sealed class Screen(
     object Login : Screen("login")
     object SignUp : Screen("signup")
     object Profile : Screen("profile")
+}
+
+
+@Composable
+fun AppNavigation(
+    rootNavController: NavHostController
+) {
+    NavHost(
+        navController = rootNavController,
+        startDestination = Screen.Login.route,
+        enterTransition = {
+            val from = initialState.destination.route
+            val to = targetState.destination.route
+
+            if (from == Screen.Login.route &&
+                to in listOf(
+                    Screen.Home.route,
+                    Screen.Discover.route,
+                    Screen.Alerts.route
+                )
+            ) {
+                slideInHorizontally(
+                    initialOffsetX = { it },
+                    animationSpec = tween(300)
+                )
+            } else {
+                EnterTransition.None
+            }
+        },
+        exitTransition = {
+            val from = initialState.destination.route
+            val to = targetState.destination.route
+
+            if (from == Screen.Login.route &&
+                to in listOf(
+                    Screen.Home.route,
+                    Screen.Discover.route,
+                    Screen.Alerts.route
+                )
+            ) {
+                slideOutHorizontally(
+                    targetOffsetX = { -it / 4 },
+                    animationSpec = tween(300)
+                )
+            } else {
+                ExitTransition.None
+            }
+        }
+    ) {
+        composable(Screen.Login.route) { LoginScreen(rootNavController) }
+        composable(Screen.SignUp.route) { TODO() }
+        composable(Screen.Home.route) { MainScaffold() }
+    }
+}
+
+
+
+
+
+@Composable
+fun MainScaffold() {
+    val innerNavController = rememberNavController()
+    val currentBackStackEntry by innerNavController.currentBackStackEntryAsState()
+    val currentRoute = currentBackStackEntry?.destination?.route
+
+    Scaffold(
+        containerColor = Background,
+        bottomBar = {
+            if (currentRoute in listOf(
+                    Screen.Home.route,
+                    Screen.Discover.route,
+                    Screen.Alerts.route
+                )
+            ) {
+                BottomBar(
+                    selectedScreen = currentRoute ?: Screen.Home.route,
+                    onScreenSelected = { screen ->
+                        innerNavController.navigate(screen.route) {
+                            launchSingleTop = true
+                        }
+                    }
+                )
+            }
+        }
+    ) { padding ->
+
+        NavHost(
+            navController = innerNavController,
+            startDestination = Screen.Home.route,
+            modifier = Modifier.padding(padding),
+            enterTransition = {
+                EnterTransition.None
+            },
+            exitTransition = {
+                ExitTransition.None
+            }
+        ) {
+
+            composable(Screen.Home.route) {
+                HomeScreen(innerNavController)
+            }
+
+            composable(Screen.Discover.route) {
+                DiscoverScreen(innerNavController)
+            }
+
+            composable(Screen.Alerts.route) {
+                AlertScreen(innerNavController)
+            }
+        }
+    }
 }
