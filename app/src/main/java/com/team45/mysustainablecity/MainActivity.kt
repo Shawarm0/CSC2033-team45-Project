@@ -41,6 +41,7 @@ import com.team45.mysustainablecity.ui.screens.AlertScreen
 import com.team45.mysustainablecity.ui.screens.DiscoverScreen
 import com.team45.mysustainablecity.ui.screens.HomeScreen
 import com.team45.mysustainablecity.ui.screens.LoginScreen
+import com.team45.mysustainablecity.ui.screens.SignUpScreen
 import com.team45.mysustainablecity.ui.theme.Background
 import com.team45.mysustainablecity.ui.theme.MySustainableCityTheme
 
@@ -151,43 +152,61 @@ fun AppNavigation(
             val from = initialState.destination.route
             val to = targetState.destination.route
 
-            if (from == Screen.Login.route &&
-                to in listOf(
+            when (// Forward: Login → SignUp or Main
+                from) {
+                Screen.Login.route if to in listOf(
+                    Screen.SignUp.route,
                     Screen.Home.route,
                     Screen.Discover.route,
                     Screen.Alerts.route
-                )
-            ) {
-                slideInHorizontally(
-                    initialOffsetX = { it },
-                    animationSpec = tween(300)
-                )
-            } else {
-                EnterTransition.None
+                ) -> {
+                    slideInHorizontally(
+                        initialOffsetX = { it },
+                        animationSpec = tween(300)
+                    )
+                }
+
+                // Back: SignUp → Login
+                Screen.SignUp.route if to == Screen.Login.route -> {
+                    EnterTransition.None   // 🔥 important
+                }
+
+                else -> EnterTransition.None
             }
         },
+
         exitTransition = {
             val from = initialState.destination.route
             val to = targetState.destination.route
 
-            if (from == Screen.Login.route &&
-                to in listOf(
+            when (// Forward: Login → SignUp or Main
+                from) {
+                Screen.Login.route if to in listOf(
+                    Screen.SignUp.route,
                     Screen.Home.route,
                     Screen.Discover.route,
                     Screen.Alerts.route
-                )
-            ) {
-                slideOutHorizontally(
-                    targetOffsetX = { -it / 4 },
-                    animationSpec = tween(300)
-                )
-            } else {
-                ExitTransition.None
+                ) -> {
+                    slideOutHorizontally(
+                        targetOffsetX = { -it / 4 },
+                        animationSpec = tween(300)
+                    )
+                }
+
+                // Back: SignUp → Login
+                Screen.SignUp.route if to == Screen.Login.route -> {
+                    slideOutHorizontally(
+                        targetOffsetX = { it },   // 👉 move SignUp to right
+                        animationSpec = tween(300)
+                    )
+                }
+
+                else -> ExitTransition.None
             }
         }
     ) {
         composable(Screen.Login.route) { LoginScreen(rootNavController) }
-        composable(Screen.SignUp.route) { TODO() }
+        composable(Screen.SignUp.route) { SignUpScreen(rootNavController) }
         composable(Screen.Home.route) { MainScaffold() }
     }
 }

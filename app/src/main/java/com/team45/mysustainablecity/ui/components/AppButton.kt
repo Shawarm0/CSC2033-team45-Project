@@ -24,7 +24,7 @@ import com.team45.mysustainablecity.ui.theme.Primary
  * A reusable rounded Material 3 button used throughout the app
  * to provide consistent styling and behaviour.
  *
- * This composable wraps a Material 3 [Button] and applies:
+ * This composable wraps a Material 3 [androidx.compose.material3.Button] and applies:
  * - Rounded pill shape
  * - Custom primary colour styling
  * - Optional leading icon

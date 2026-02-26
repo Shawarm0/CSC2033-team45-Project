@@ -46,10 +46,12 @@ import com.team45.mysustainablecity.ui.theme.Primary
 import com.team45.mysustainablecity.ui.theme.TextColor
 
 @Composable
-fun LoginScreen(
+fun SignUpScreen(
     navController: NavController
 ) {
     val focusManager = LocalFocusManager.current
+    val emailFocusRequester = remember { FocusRequester() }
+    val confirmEmailFocusRequester = remember { FocusRequester() }
     val passwordFocusRequester = remember { FocusRequester() }
 
     Scaffold(
@@ -98,6 +100,7 @@ fun LoginScreen(
                 .padding(innerPadding)
         ) {
 
+
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -107,7 +110,7 @@ fun LoginScreen(
             ) {
 
                 Text(
-                    text = "Login",
+                    text = "Sign Up",
                     style = MaterialTheme.typography.displayLarge
                 )
                 Spacer(modifier = Modifier.height(5.dp))
@@ -127,11 +130,33 @@ fun LoginScreen(
 
                 CustomTextField(
                     modifier = Modifier
-                        .width(350.dp),
+                        .width(350.dp)
+                        .focusRequester(emailFocusRequester),
                     value = email,
                     placeholder = "testemail@gmail.com",
                     label = "Email",
                     onValueChange = { email = it },
+                    keyboardOptions = KeyboardOptions(
+                        imeAction = ImeAction.Next
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onNext = {
+                            confirmEmailFocusRequester.requestFocus()
+                        }
+                    )
+                )
+                Spacer(modifier = Modifier.height(13.dp))
+
+                var confirmEmail by remember { mutableStateOf("") }
+
+                CustomTextField(
+                    modifier = Modifier
+                        .width(350.dp)
+                        .focusRequester(confirmEmailFocusRequester),
+                    value = confirmEmail,
+                    placeholder = "testemail@gmail.com",
+                    label = "Confirm Email",
+                    onValueChange = { confirmEmail = it },
                     keyboardOptions = KeyboardOptions(
                         imeAction = ImeAction.Next
                     ),
@@ -156,7 +181,7 @@ fun LoginScreen(
                     ),
                     keyboardActions = KeyboardActions(
                         onDone = {
-                            focusManager.clearFocus() // Hides keyboard
+                            focusManager.clearFocus()
                         }
                     )
                 )
@@ -167,14 +192,13 @@ fun LoginScreen(
                 AppButton(
                     modifier = Modifier.width(170.dp),
                     onClick = {
-                        navController.navigate(Screen.Home.route) {
-                            popUpTo(Screen.Login.route) { inclusive = true }
+                        navController.navigate(Screen.Login.route) {
+                            popUpTo(Screen.SignUp.route) { inclusive = true }
                         }
                     },
-                    text = "Login",
+                    text = "Sign Up",
                     symbol = Icons.Default.Check,
                 )
-
             }
 
             // BOTTOM CONTENT
@@ -192,19 +216,21 @@ fun LoginScreen(
                 )
 
                 Row {
-                    Text("Need an account?: ")
+                    Text("Already have an account?: ")
                     Text(
                         modifier = Modifier.clickable {
-                            navController.navigate(Screen.SignUp.route) {
-                                popUpTo(Screen.Login.route) { inclusive = true }
+                            navController.navigate(Screen.Login.route) {
+                                popUpTo(Screen.SignUp.route) { inclusive = true }
                             }
                         },
-                        text = "Sign Up",
+                        text = "Login",
                         color = Color.Blue,
                         fontWeight = FontWeight.Bold
                     )
                 }
             }
+
+
         }
     }
 }
