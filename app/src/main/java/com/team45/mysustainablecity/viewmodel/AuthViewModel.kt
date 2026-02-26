@@ -4,11 +4,13 @@ import TokenManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.team45.mysustainablecity.data.classes.User
+import com.team45.mysustainablecity.reps.userRep
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlin.uuid.ExperimentalUuidApi
 
+class AuthViewModel: ViewModel() {
 class AuthViewModel(
     private val userRep: UserRep,
     private val tokenManager: TokenManager
@@ -32,7 +34,17 @@ class AuthViewModel(
             _errorState.value = null
 
             try {
-                userRep.registerUser(user)
+
+                val token = userRep.registerUser(user)
+
+                // ✅ Save token securely
+                tokenManager.saveToken(token)
+
+                // ✅ Update states
+                _authState.value = user
+                _isAuthenticated.value = true
+
+
             } catch (e: Exception) {
                 _errorState.value = e.message
             } finally {
