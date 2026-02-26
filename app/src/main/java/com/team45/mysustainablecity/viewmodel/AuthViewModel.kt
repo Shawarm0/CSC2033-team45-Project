@@ -40,13 +40,17 @@ class AuthViewModel(
         }
     }
 
-    fun registerUser(user: User,password: String) {
+    fun register(
+        email: String,
+        password: String,
+        role: String
+    ) {
         viewModelScope.launch {
             _isLoading.value = true
             _errorState.value = null
 
             try {
-                userRep.registerUser(user,password)
+                userRep.registerUser(email, password, role)
             } catch (e: Exception) {
                 _errorState.value = e.message
             } finally {
@@ -55,17 +59,15 @@ class AuthViewModel(
         }
     }
 
-    @OptIn(ExperimentalUuidApi::class)
     fun login(email: String, password: String) {
         viewModelScope.launch {
             _isLoading.value = true
             _errorState.value = null
 
             try {
-                userRep.loginUser(email,password)
+                userRep.loginUser(email, password)
             } catch (e: Exception) {
                 _errorState.value = e.message
-                _isAuthenticated.value = false
             } finally {
                 _isLoading.value = false
             }

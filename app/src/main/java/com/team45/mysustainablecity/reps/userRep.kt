@@ -7,7 +7,10 @@ import io.github.jan.supabase.auth.exception.AuthRestException
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.auth.status.SessionStatus
 import io.github.jan.supabase.postgrest.from
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
@@ -18,24 +21,29 @@ class UserRep {
     private val client = SupabaseClientProvider.client
 
 
-    suspend fun registerUser(user: User, password: String): Boolean {
+    /**
+     * Register user with Supabase Auth + insert profile
+     */
+    suspend fun registerUser(
+        email: String,
+        password: String,
+        role: String
+    ) {
         val result = client.auth.signUpWith(Email) {
-            email = user.email
+            this.email = email
             this.password = password
         }
 
-        val authUser = result ?: return false
+        val authUser = result ?: throw Exception("User creation failed")
 
         client.from("users").insert(
             mapOf(
                 "user_id" to authUser.id,
-                "email" to user.email,
-                "role" to user.role,
+                "email" to email,
+                "role" to role,
                 "is_active" to true
             )
         )
-
-        return true
     }
     //suspend because needs to pause without blocking main thread
     suspend fun loginUser(email: String, password: String) {
@@ -50,32 +58,39 @@ class UserRep {
         }
     }
 
-    @OptIn(ExperimentalUuidApi::class, ExperimentalTime::class)
+    @OptIn(ExperimentalUuidApi::class, ExperimentalTime::class, ExperimentalCoroutinesApi::class)
     fun observeSession(): Flow<User?> =
-        client.auth.sessionStatus.map { status ->
-            when (status) {
-                is SessionStatus.Authenticated -> {
-                    val authUser = status.session.user ?: return@map null
-
-                    val profile = client
-                        .from("users")
-                        .select {
-                            filter {
-                                eq("user_id", authUser.id)
-                            }
+        client.auth.sessionStatus.flatMapLatest { status ->
+            flow {
+                when (status) {
+                    is SessionStatus.Authenticated -> {
+                        val authUser = status.session.user
+                        if (authUser == null) {
+                            emit(null)
+                            return@flow
                         }
-                        .decodeSingle<User>()
 
-                    User(
-                        userId = Uuid.parse(authUser.id),
-                        email = authUser.email!!,
-                        role = profile.role,
-                        createdAt = profile.createdAt,
-                        lastLoginAt = authUser.lastSignInAt,
-                        isActive = profile.isActive
-                    )
+                        val profile = client
+                            .from("users")
+                            .select {
+                                filter { eq("user_id", authUser.id) }
+                            }
+                            .decodeSingle<User>()
+
+                        emit(
+                            User(
+                                userId = Uuid.parse(authUser.id),
+                                email = authUser.email!!,
+                                role = profile.role,
+                                createdAt = profile.createdAt,
+                                lastLoginAt = authUser.lastSignInAt,
+                                isActive = profile.isActive
+                            )
+                        )
+                    }
+
+                    else -> emit(null)
                 }
-                else -> null
             }
         }
 
