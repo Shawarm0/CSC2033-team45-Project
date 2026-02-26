@@ -16,3 +16,7 @@ val Primary = Color(0xFF1E8449)
 val Background = Color(0xFFE8F1EC)
 val LightHighlight = Color(0xFFDCEEE4)
 val BottomBarColor = Color(0xFFF4F6F2)
+
+val TextColor = Color(0xFF3D4D5C)
+
+val LightBoxBackground = Color(0xFFFFFFFF) // Pure white for contrast
