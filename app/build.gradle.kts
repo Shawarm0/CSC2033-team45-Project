@@ -55,7 +55,7 @@ android {
 }
 
 dependencies {
-
+    implementation("androidx.security:security-crypto:1.1.0-alpha06")
     // Supabase Version
     var supabaseVersion = "3.0.0"
     var ktorVersion = "3.0.0-rc-1"
