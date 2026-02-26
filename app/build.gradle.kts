@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -21,6 +23,14 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    var localProperties = Properties()
+    val localPropertiesFile = File(rootDir, "local.properties")
+    if (localPropertiesFile.exists() && localPropertiesFile.isFile) {
+        localPropertiesFile.inputStream().use {
+            localProperties.load(it)
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -29,6 +39,10 @@ android {
                 "proguard-rules.pro"
             )
         }
+        debug {
+            buildConfigField("String","API_KEY","\"${localProperties.getProperty("API_KEY")}\"")
+            buildConfigField("String","SUPABASE_URL","\"${localProperties.getProperty("SUPABASE_URL")}\"")
+        }
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -36,6 +50,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
