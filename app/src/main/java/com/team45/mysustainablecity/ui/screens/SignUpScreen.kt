@@ -2,6 +2,7 @@ package com.team45.mysustainablecity.ui.screens
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -35,6 +36,7 @@ import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.team45.mysustainablecity.Screen
@@ -218,14 +220,19 @@ fun SignUpScreen(
                 Row {
                     Text("Already have an account?: ")
                     Text(
-                        modifier = Modifier.clickable {
-                            navController.navigate(Screen.Login.route) {
-                                popUpTo(Screen.SignUp.route) { inclusive = true }
-                            }
-                        },
+                        modifier = Modifier.clickable(
+                            onClick = {
+                                navController.navigate(Screen.Login.route) {
+                                    popUpTo(Screen.SignUp.route) { inclusive = true }
+                                }
+                            },
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null
+                        ),
                         text = "Login",
                         color = Color.Blue,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        textDecoration = TextDecoration.Underline
                     )
                 }
             }
