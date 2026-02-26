@@ -1,15 +1,19 @@
 package com.team45.mysustainablecity.viewmodel
 
+import TokenManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.team45.mysustainablecity.data.classes.User
-import com.team45.mysustainablecity.reps.userRep
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlin.uuid.ExperimentalUuidApi
 
-class AuthViewModel: ViewModel() {
+class AuthViewModel(
+    private val userRep: UserRep,
+    private val tokenManager: TokenManager
+): ViewModel() {
+
     private val _authState = MutableStateFlow<User?>(null)
     val authState: StateFlow<User?> = _authState
 
@@ -37,7 +41,6 @@ class AuthViewModel: ViewModel() {
                 // ✅ Update states
                 _authState.value = user
                 _isAuthenticated.value = true
-
 
             } catch (e: Exception) {
                 _errorState.value = e.message
