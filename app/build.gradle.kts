@@ -40,6 +40,10 @@ android {
                 "proguard-rules.pro"
             )
         }
+        debug {
+            buildConfigField("String","API_KEY","\"${localProperties.getProperty("API_KEY")}\"")
+            buildConfigField("String","SUPABASE_URL","\"${localProperties.getProperty("SUPABASE_URL")}\"")
+        }
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
