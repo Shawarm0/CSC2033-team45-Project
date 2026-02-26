@@ -214,8 +214,15 @@ fun MainScaffold() {
                 BottomBar(
                     selectedScreen = currentRoute ?: Screen.Home.route,
                     onScreenSelected = { screen ->
-                        innerNavController.navigate(screen.route) {
-                            launchSingleTop = true
+                        // Prevent recomposition on clicking the same screen
+                        if (currentRoute != screen.route) {
+                            innerNavController.navigate(screen.route) {
+                                popUpTo(innerNavController.graph.startDestinationId) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
                         }
                     }
                 )
@@ -234,15 +241,12 @@ fun MainScaffold() {
                 ExitTransition.None
             }
         ) {
-
             composable(Screen.Home.route) {
                 HomeScreen(innerNavController)
             }
-
             composable(Screen.Discover.route) {
                 DiscoverScreen(innerNavController)
             }
-
             composable(Screen.Alerts.route) {
                 AlertScreen(innerNavController)
             }
