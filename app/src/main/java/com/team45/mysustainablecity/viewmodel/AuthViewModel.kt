@@ -32,16 +32,7 @@ class AuthViewModel(
             _errorState.value = null
 
             try {
-
-                val token = userRep.registerUser(user)
-
-                // ✅ Save token securely
-                tokenManager.saveToken(token)
-
-                // ✅ Update states
-                _authState.value = user
-                _isAuthenticated.value = true
-
+                userRep.registerUser(user)
             } catch (e: Exception) {
                 _errorState.value = e.message
             } finally {
@@ -57,7 +48,10 @@ class AuthViewModel(
             _errorState.value = null
 
             try {
-                //login check
+                val token = userRep.loginUser(email,password)
+                tokenManager.saveToken(token)
+                _authState.value = userRep.getSelf()
+                _isAuthenticated.value = true
 
             } catch (e: Exception) {
                 _errorState.value = e.message
@@ -69,6 +63,7 @@ class AuthViewModel(
     }
 
     fun logout() {
+        tokenManager.clearToken()
         _authState.value = null
         _isAuthenticated.value = false
     }
