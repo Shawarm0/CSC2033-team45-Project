@@ -12,10 +12,11 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapLatest
 import kotlin.time.ExperimentalTime
-import kotlin.time.Instant
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
+import kotlinx.datetime.Instant
 
 class UserRep {
     private val client = SupabaseClientProvider.client
@@ -58,39 +59,31 @@ class UserRep {
         }
     }
 
-    @OptIn(ExperimentalUuidApi::class, ExperimentalTime::class, ExperimentalCoroutinesApi::class)
+    @OptIn(ExperimentalUuidApi::class, ExperimentalCoroutinesApi::class)
     fun observeSession(): Flow<User?> =
-        client.auth.sessionStatus.flatMapLatest { status ->
-            flow {
-                when (status) {
-                    is SessionStatus.Authenticated -> {
-                        val authUser = status.session.user
-                        if (authUser == null) {
-                            emit(null)
-                            return@flow
+        client.auth.sessionStatus.mapLatest { status ->
+            when (status) {
+                is SessionStatus.Authenticated -> {
+                    val authUser = status.session.user ?: return@mapLatest null
+
+                    val profile = client
+                        .from("users")
+                        .select {
+                            filter { eq("user_id", authUser.id) }
                         }
+                        .decodeSingleOrNull<User>()
+                        ?: return@mapLatest null
 
-                        val profile = client
-                            .from("users")
-                            .select {
-                                filter { eq("user_id", authUser.id) }
-                            }
-                            .decodeSingle<User>()
-
-                        emit(
-                            User(
-                                userId = Uuid.parse(authUser.id),
-                                email = authUser.email!!,
-                                role = profile.role,
-                                createdAt = profile.createdAt,
-                                lastLoginAt = authUser.lastSignInAt,
-                                isActive = profile.isActive
-                            )
-                        )
-                    }
-
-                    else -> emit(null)
+                    User(
+                        userId = Uuid.parse(authUser.id),
+                        email = authUser.email!!,
+                        role = profile.role,
+                        createdAt = profile.createdAt,
+                        isActive = profile.isActive,
+                        lastLoginAt = authUser.lastSignInAt
+                    )
                 }
+                else -> null
             }
         }
 
