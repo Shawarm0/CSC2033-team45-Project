@@ -32,6 +32,40 @@ import androidx.compose.ui.unit.sp
 import com.team45.mysustainablecity.ui.theme.LightBoxBackground
 import kotlinx.coroutines.launch
 
+
+/**
+ * A fully customisable rounded text input field built on top of [BasicTextField].
+ *
+ * This composable provides:
+ * - Optional label and inline error message
+ * - Custom placeholder
+ * - Leading and trailing content slots (e.g. icons)
+ * - Optional clear button
+ * - Error state styling
+ * - Focus-aware border and text colour changes
+ * - Keyboard configuration (IME actions, input types, etc.)
+ * - Optional numeric filtering via [floatsOnly]
+ * - Automatic bring-into-view behaviour when focused
+ *
+ * @param value The current text value displayed inside the field.
+ * @param onValueChange Callback triggered when the text changes.
+ * @param modifier Modifier applied to the root container.
+ * @param label Optional label displayed above the field.
+ * @param placeholder Placeholder text shown when [value] is empty.
+ * @param leadingContent Optional composable displayed at the start of the text field.
+ * @param trailingContent Optional composable displayed at the end of the text field.
+ * @param isError Whether the field is currently in an error state.
+ * @param errorMessage Optional error message displayed next to the label.
+ * @param enabled Controls whether the field is editable.
+ * @param readOnly Controls whether the field is read-only.
+ * @param singleLine Whether the text field is constrained to a single line.
+ * @param maxLines Maximum number of visible text lines.
+ * @param clearButton If true, shows a clear (X) button when text is not empty.
+ * @param keyboardOptions Software keyboard configuration (IME action, input type, etc.).
+ * @param keyboardActions Defines actions triggered from the keyboard (Next, Done, etc.).
+ * @param visualTransformation Transforms how the text is visually displayed (e.g. password masking).
+ * @param floatsOnly If true, restricts input to valid floating-point numbers.
+ */
 @Composable
 fun CustomTextField(
     value: String,
@@ -221,7 +255,23 @@ fun CustomTextField(
 
 
 
-
+/**
+ * A password input field built on top of [CustomTextField] with
+ * visibility toggle support.
+ *
+ * This composable:
+ * - Masks input by default using [PasswordVisualTransformation]
+ * - Provides a trailing visibility toggle icon
+ * - Supports custom keyboard options and IME actions
+ * - Inherits styling and behaviour from [CustomTextField]
+ *
+ * @param modifier Modifier applied to the text field.
+ * @param value The current password value.
+ * @param onValueChange Callback triggered when the password changes.
+ * @param label Label displayed above the field.
+ * @param keyboardOptions Software keyboard configuration (IME action, input type, etc.).
+ * @param keyboardActions Defines actions triggered from the keyboard (Next, Done, etc.).
+ */
 @Composable
 fun PasswordTextField(
     modifier: Modifier = Modifier,
