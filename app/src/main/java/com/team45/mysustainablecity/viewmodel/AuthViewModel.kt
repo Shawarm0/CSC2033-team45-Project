@@ -1,6 +1,5 @@
 package com.team45.mysustainablecity.viewmodel
 
-import TokenManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.team45.mysustainablecity.data.classes.User
@@ -12,7 +11,6 @@ import kotlin.uuid.ExperimentalUuidApi
 
 class AuthViewModel(
     private val userRep: UserRep,
-    private val tokenManager: TokenManager
 ): ViewModel() {
 
     private val _authState = MutableStateFlow<User?>(null)
@@ -27,13 +25,28 @@ class AuthViewModel(
     private val _errorState = MutableStateFlow<String?>(null)
     val errorState: StateFlow<String?> = _errorState
 
-    fun registerUser(user: User) {
+    init {
+        observeAuthState()
+    }
+    /**
+     * Observe Supabase session automatically
+     */
+    private fun observeAuthState() {
+        viewModelScope.launch {
+            userRep.observeSession().collect { user:User? ->
+                _authState.value = user
+                _isAuthenticated.value = user != null
+            }
+        }
+    }
+
+    fun registerUser(user: User,password: String) {
         viewModelScope.launch {
             _isLoading.value = true
             _errorState.value = null
 
             try {
-                userRep.registerUser(user)
+                userRep.registerUser(user,password)
             } catch (e: Exception) {
                 _errorState.value = e.message
             } finally {
@@ -49,11 +62,7 @@ class AuthViewModel(
             _errorState.value = null
 
             try {
-                val token = userRep.loginUser(email,password)
-                tokenManager.saveToken(token)
-                _authState.value = userRep.getSelf()
-                _isAuthenticated.value = true
-
+                userRep.loginUser(email,password)
             } catch (e: Exception) {
                 _errorState.value = e.message
                 _isAuthenticated.value = false
@@ -64,9 +73,9 @@ class AuthViewModel(
     }
 
     fun logout() {
-        tokenManager.clearToken()
-        _authState.value = null
-        _isAuthenticated.value = false
+        viewModelScope.launch {
+            userRep.logout()
+        }
     }
 
 }
