@@ -7,12 +7,15 @@ import io.github.jan.supabase.auth.exception.AuthRestException
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.auth.status.SessionStatus
 import io.github.jan.supabase.postgrest.from
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.withContext
 import kotlin.time.ExperimentalTime
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -61,31 +64,33 @@ class UserRep {
 
     @OptIn(ExperimentalUuidApi::class, ExperimentalCoroutinesApi::class)
     fun observeSession(): Flow<User?> =
-        client.auth.sessionStatus.mapLatest { status ->
-            when (status) {
-                is SessionStatus.Authenticated -> {
-                    val authUser = status.session.user ?: return@mapLatest null
+        client.auth.sessionStatus
+            .mapLatest { status ->
+                when (status) {
+                    is SessionStatus.Authenticated -> {
+                        val authUser = status.session.user ?: return@mapLatest null
 
-                    val profile = client
-                        .from("users")
-                        .select {
-                            filter { eq("user_id", authUser.id) }
-                        }
-                        .decodeSingleOrNull<User>()
-                        ?: return@mapLatest null
+                        val profile = client
+                            .from("users")
+                            .select {
+                                filter { eq("user_id", authUser.id) }
+                            }
+                            .decodeSingleOrNull<User>()
+                            ?: return@mapLatest null
 
-                    User(
-                        userId = Uuid.parse(authUser.id),
-                        email = authUser.email!!,
-                        role = profile.role,
-                        createdAt = profile.createdAt,
-                        isActive = profile.isActive,
-                        lastLoginAt = authUser.lastSignInAt
-                    )
+                        User(
+                            userId = profile.userId,
+                            email = authUser.email ?: profile.email,
+                            role = profile.role,
+                            createdAt = profile.createdAt,
+                            isActive = profile.isActive,
+                            lastLoginAt = authUser.lastSignInAt
+                        )
+                    }
+                    else -> null
                 }
-                else -> null
             }
-        }
+            .flowOn(Dispatchers.IO)
 
         suspend fun logout() {
             try {
