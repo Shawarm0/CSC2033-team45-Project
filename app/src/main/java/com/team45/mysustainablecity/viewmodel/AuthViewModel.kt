@@ -10,7 +10,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlin.uuid.ExperimentalUuidApi
 
-class AuthViewModel: ViewModel() {
 class AuthViewModel(
     private val userRep: UserRep,
     private val tokenManager: TokenManager
