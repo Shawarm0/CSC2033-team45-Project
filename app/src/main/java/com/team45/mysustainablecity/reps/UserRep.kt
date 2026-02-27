@@ -50,16 +50,10 @@ class UserRep {
         )
     }
     //suspend because needs to pause without blocking main thread
-    suspend fun loginUser(email: String, password: String): Result<Unit> {
-        try {
-            client.auth.signInWith(Email) {
-                this.email = email
-                this.password = password
-            }
-            return Result.success(Unit)
-        } catch (e: AuthRestException) {
-            println("Auth error: ${e.description}")
-            return Result.failure(e)
+    suspend fun loginUser(email: String, password: String) {
+        client.auth.signInWith(Email) {
+            this.email = email
+            this.password = password
         }
     }
 

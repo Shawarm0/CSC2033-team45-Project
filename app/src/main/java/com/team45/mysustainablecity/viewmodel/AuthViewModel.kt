@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.team45.mysustainablecity.data.classes.User
 import com.team45.mysustainablecity.reps.UserRep
+import io.github.jan.supabase.auth.exception.AuthRestException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -50,8 +51,10 @@ class AuthViewModel(
 
             try {
                 userRep.registerUser(email, password, role)
+            } catch (e: AuthRestException) {
+                _errorState.value = e.description
             } catch (e: Exception) {
-                _errorState.value = e.message
+                _errorState.value = e.message ?: "User creation failed"
             } finally {
                 _isLoading.value = false
             }
@@ -62,9 +65,10 @@ class AuthViewModel(
         viewModelScope.launch {
             _isLoading.value = true
             _errorState.value = null
-
             try {
                 userRep.loginUser(email, password)
+            } catch (e: AuthRestException) {
+                _errorState.value = e.description
             } catch (e: Exception) {
                 _errorState.value = e.message
             } finally {
