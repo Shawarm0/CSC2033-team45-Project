@@ -88,12 +88,7 @@ class UserRep {
             .flowOn(Dispatchers.IO)
 
         suspend fun logout() {
-            try {
-                client.auth.signOut()
-            } catch (e: Exception) {
-                println("Logout error: ${e.message}")
-                throw e
-            }
+            client.auth.signOut()
         }
 
 }

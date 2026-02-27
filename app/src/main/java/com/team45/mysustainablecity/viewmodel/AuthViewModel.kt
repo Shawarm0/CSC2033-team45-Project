@@ -79,8 +79,12 @@ class AuthViewModel(
 
     fun logout() {
         viewModelScope.launch {
-            userRep.logout()
+            try {
+                userRep.logout()
+            } catch (e: Exception) {
+                println("Logout error: ${e.message}")
+                throw e
+            }
         }
     }
-
 }
