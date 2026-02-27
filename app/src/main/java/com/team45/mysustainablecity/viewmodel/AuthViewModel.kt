@@ -78,12 +78,18 @@ class AuthViewModel(
     }
 
     fun logout() {
+        if (_isLoading.value) return
+
         viewModelScope.launch {
+            _isLoading.value = true
+            _errorState.value = null
+
             try {
                 userRep.logout()
             } catch (e: Exception) {
-                println("Logout error: ${e.message}")
-                throw e
+                _errorState.value = e.message ?: "Logout failed"
+            } finally {
+                _isLoading.value = false
             }
         }
     }
