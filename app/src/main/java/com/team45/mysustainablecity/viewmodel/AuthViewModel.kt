@@ -1,5 +1,6 @@
 package com.team45.mysustainablecity.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.team45.mysustainablecity.data.classes.User
@@ -36,6 +37,12 @@ class AuthViewModel(
             userRep.observeSession().collect { user:User? ->
                 _authState.value = user
                 _isAuthenticated.value = user != null
+
+                if (user != null) {
+                    Log.d("AuthViewModel", "Authenticated user: $user")
+                } else {
+                    Log.d("AuthViewModel", "User is not authenticated")
+                }
             }
         }
     }
@@ -65,11 +72,15 @@ class AuthViewModel(
         viewModelScope.launch {
             _isLoading.value = true
             _errorState.value = null
+
             try {
                 userRep.loginUser(email, password)
+                Log.d("AuthViewModel", "Login request sent")
             } catch (e: AuthRestException) {
+                Log.e("AuthViewModel", "Auth error: ${e.description}")
                 _errorState.value = e.description
             } catch (e: Exception) {
+                Log.e("AuthViewModel", "Login failed: ${e.message}")
                 _errorState.value = e.message
             } finally {
                 _isLoading.value = false

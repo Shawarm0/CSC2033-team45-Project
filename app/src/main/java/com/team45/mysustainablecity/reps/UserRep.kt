@@ -1,5 +1,6 @@
 package com.team45.mysustainablecity.reps
 
+import android.util.Log
 import com.team45.mysustainablecity.data.classes.User
 import com.team45.mysustainablecity.data.remote.SupabaseClientProvider
 import io.github.jan.supabase.auth.auth
@@ -38,22 +39,29 @@ class UserRep {
             this.password = password
         }
 
+
+
         val authUser = result ?: throw Exception("User creation failed")
 
         client.from("users").insert(
             mapOf(
-                "user_id" to authUser.id,
+                "userID" to authUser.id,
                 "email" to email,
                 "role" to role,
-                "is_active" to true
+                "isActive" to true
             )
         )
     }
     //suspend because needs to pause without blocking main thread
     suspend fun loginUser(email: String, password: String) {
-        client.auth.signInWith(Email) {
-            this.email = email
-            this.password = password
+        try {
+            val result = client.auth.signInWith(Email) {
+                this.email = email
+                this.password = password
+            }
+            Log.d("UserRep", "Sign in result: $result")
+        } catch (e: Exception) {
+            Log.e("UserRep", "Login failed: ${e.message}")
         }
     }
 
@@ -68,7 +76,7 @@ class UserRep {
                         val profile = client
                             .from("users")
                             .select {
-                                filter { eq("user_id", authUser.id) }
+                                filter { eq("userID", authUser.id) }
                             }
                             .decodeSingleOrNull<User>()
                             ?: return@mapLatest null

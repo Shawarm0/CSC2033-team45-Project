@@ -5,15 +5,11 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.foundation.interaction.HoverInteraction
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Explore
@@ -23,12 +19,8 @@ import androidx.compose.material.icons.outlined.Explore
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Place
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavHostController
@@ -44,11 +36,17 @@ import com.team45.mysustainablecity.ui.screens.LoginScreen
 import com.team45.mysustainablecity.ui.screens.SignUpScreen
 import com.team45.mysustainablecity.ui.theme.Background
 import com.team45.mysustainablecity.ui.theme.MySustainableCityTheme
+import com.team45.mysustainablecity.utils.AppContainer
+import com.team45.mysustainablecity.viewmodel.AuthViewModel
 
 /**
  * The main entry point of the app
  */
 class MainActivity : ComponentActivity() {
+
+    val appContainer = AppContainer()
+    val authViewModel = AuthViewModel(userRep = appContainer.userRepository)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Log.d("MainActivity", "onCreate() called")
@@ -57,7 +55,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             MySustainableCityTheme {
                 val rootNavController = rememberNavController()
-                AppNavigation(rootNavController)
+                AppNavigation(rootNavController, authViewModel)
             }
         }
     }
@@ -143,7 +141,8 @@ sealed class Screen(
 
 @Composable
 fun AppNavigation(
-    rootNavController: NavHostController
+    rootNavController: NavHostController,
+    authViewModel: AuthViewModel
 ) {
     NavHost(
         navController = rootNavController,
@@ -205,8 +204,8 @@ fun AppNavigation(
             }
         }
     ) {
-        composable(Screen.Login.route) { LoginScreen(rootNavController) }
-        composable(Screen.SignUp.route) { SignUpScreen(rootNavController) }
+        composable(Screen.Login.route) { LoginScreen(rootNavController, authViewModel) }
+        composable(Screen.SignUp.route) { SignUpScreen(rootNavController, authViewModel) }
         composable(Screen.Home.route) { MainScaffold() }
     }
 }
@@ -216,7 +215,8 @@ fun AppNavigation(
 
 
 @Composable
-fun MainScaffold() {
+fun MainScaffold(
+) {
     val innerNavController = rememberNavController()
     val currentBackStackEntry by innerNavController.currentBackStackEntryAsState()
     val currentRoute = currentBackStackEntry?.destination?.route
