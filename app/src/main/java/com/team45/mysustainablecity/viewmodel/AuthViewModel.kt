@@ -4,7 +4,9 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.team45.mysustainablecity.data.classes.User
+import com.team45.mysustainablecity.data.remote.SupabaseClientProvider
 import com.team45.mysustainablecity.reps.UserRep
+import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.exception.AuthRestException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -13,6 +15,8 @@ import kotlin.uuid.ExperimentalUuidApi
 class AuthViewModel(
     private val userRep: UserRep,
 ): ViewModel() {
+
+    private val client = SupabaseClientProvider.client
 
     private val _authState = MutableStateFlow<User?>(null)
     val authState: StateFlow<User?> = _authState
@@ -36,12 +40,12 @@ class AuthViewModel(
         viewModelScope.launch {
             userRep.observeSession().collect { user:User? ->
                 _authState.value = user
-                _isAuthenticated.value = user != null
+                _isAuthenticated.value = client.auth.currentSessionOrNull()?.user?.id != null
 
                 if (user != null) {
                     Log.d("AuthViewModel", "Authenticated user: $user")
                 } else {
-                    Log.d("AuthViewModel", "User is not authenticated")
+                    Log.d("AuthViewModel", "User is null")
                 }
             }
         }
@@ -50,18 +54,19 @@ class AuthViewModel(
     fun register(
         email: String,
         password: String,
-        role: String
     ) {
         viewModelScope.launch {
             _isLoading.value = true
             _errorState.value = null
 
             try {
-                userRep.registerUser(email, password, role)
+                userRep.registerUser(email, password)
+                Log.d("AuthViewModel", "register requested")
             } catch (e: AuthRestException) {
                 _errorState.value = e.description
             } catch (e: Exception) {
                 _errorState.value = e.message ?: "User creation failed"
+                Log.e("AuthViewModel", "Auth error: ${e.message}")
             } finally {
                 _isLoading.value = false
             }

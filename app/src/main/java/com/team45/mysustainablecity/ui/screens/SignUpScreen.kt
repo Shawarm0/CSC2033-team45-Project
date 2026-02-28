@@ -221,7 +221,6 @@ fun SignUpScreen(
                         authViewModel.register(
                             email = email,
                             password = password,
-                            role = "user" // default role
                         )
                     },
                     text = if (isLoading.value) "Loading..." else "Sign Up",
