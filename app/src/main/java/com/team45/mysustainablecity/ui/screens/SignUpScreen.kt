@@ -21,6 +21,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -53,10 +55,25 @@ fun SignUpScreen(
     navController: NavController,
     authViewModel: AuthViewModel
 ) {
+    val isAuthenticated = authViewModel.isAuthenticated.collectAsState()
     val focusManager = LocalFocusManager.current
     val emailFocusRequester = remember { FocusRequester() }
     val confirmEmailFocusRequester = remember { FocusRequester() }
     val passwordFocusRequester = remember { FocusRequester() }
+
+    var email by remember { mutableStateOf("") }
+    var confirmEmail by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    val isLoading = authViewModel.isLoading.collectAsState()
+    val errorState = authViewModel.errorState.collectAsState()
+
+    LaunchedEffect(isAuthenticated.value) {
+        if (isAuthenticated.value) {
+            navController.navigate(Screen.Home.route) {
+                popUpTo(Screen.SignUp.route) { inclusive = true }
+            }
+        }
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -130,8 +147,6 @@ fun SignUpScreen(
                 Spacer(modifier = Modifier.height(20.dp))
 
 
-                var email by remember { mutableStateOf("") }
-
                 CustomTextField(
                     modifier = Modifier
                         .width(350.dp)
@@ -151,7 +166,6 @@ fun SignUpScreen(
                 )
                 Spacer(modifier = Modifier.height(13.dp))
 
-                var confirmEmail by remember { mutableStateOf("") }
 
                 CustomTextField(
                     modifier = Modifier
@@ -172,7 +186,6 @@ fun SignUpScreen(
                 )
                 Spacer(modifier = Modifier.height(13.dp))
 
-                var password by remember { mutableStateOf("") }
 
                 PasswordTextField(
                     modifier = Modifier
@@ -196,11 +209,22 @@ fun SignUpScreen(
                 AppButton(
                     modifier = Modifier.width(170.dp),
                     onClick = {
-                        navController.navigate(Screen.Login.route) {
-                            popUpTo(Screen.SignUp.route) { inclusive = true }
+                        if (email.isBlank() || password.isBlank()) {
+                            return@AppButton
                         }
+
+                        if (email != confirmEmail) {
+                            // You could set local error state here
+                            return@AppButton
+                        }
+
+                        authViewModel.register(
+                            email = email,
+                            password = password,
+                            role = "user" // default role
+                        )
                     },
-                    text = "Sign Up",
+                    text = if (isLoading.value) "Loading..." else "Sign Up",
                     symbol = Icons.Default.Check,
                 )
             }

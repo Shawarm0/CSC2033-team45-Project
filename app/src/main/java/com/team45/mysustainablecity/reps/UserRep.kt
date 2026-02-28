@@ -45,10 +45,10 @@ class UserRep {
 
         client.from("users").insert(
             mapOf(
-                "user_id" to authUser.id,
+                "userID" to authUser.id,
                 "email" to email,
                 "role" to role,
-                "is_active" to true
+                "isActive" to true
             )
         )
     }
