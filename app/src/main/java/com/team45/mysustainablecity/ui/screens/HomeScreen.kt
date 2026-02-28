@@ -23,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.team45.mysustainablecity.ui.components.CustomTextField
+import com.team45.mysustainablecity.ui.components.DiscoverMap
 
 @Composable
 fun HomeScreen(
@@ -72,6 +73,8 @@ fun HomeScreen(
                 }
             }
         )
+
+        DiscoverMap()
     }
 
 }

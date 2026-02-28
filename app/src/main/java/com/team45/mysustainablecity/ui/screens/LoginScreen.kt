@@ -182,6 +182,9 @@ fun LoginScreen(
                 AppButton(
                     modifier = Modifier.width(170.dp),
                     onClick = {
+                        navController.navigate(Screen.Home.route) {
+                            popUpTo(Screen.Login.route) { inclusive = true }
+                        }
                         authViewModel.login(email, password)
                     },
                     text = "Login",
