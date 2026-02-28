@@ -21,6 +21,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -54,17 +55,21 @@ fun LoginScreen(
     navController: NavController,
     authViewModel: AuthViewModel
 ) {
+    val isAuthenticated = authViewModel.isAuthenticated.collectAsState()
     val focusManager = LocalFocusManager.current
     val passwordFocusRequester = remember { FocusRequester() }
 
-
-
-    val isAuthenticated = authViewModel.isAuthenticated.collectAsState()
-    if (isAuthenticated.value) {
-        navController.navigate(Screen.Home.route) {
-            popUpTo(Screen.Login.route) { inclusive = true }
+    LaunchedEffect(isAuthenticated.value) {
+        if (isAuthenticated.value) {
+            navController.navigate(Screen.Home.route) {
+                popUpTo(Screen.Login.route) { inclusive = true }
+            }
         }
     }
+
+
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -137,8 +142,6 @@ fun LoginScreen(
                 Spacer(modifier = Modifier.height(20.dp))
 
 
-                var email by remember { mutableStateOf("") }
-
                 CustomTextField(
                     modifier = Modifier
                         .width(350.dp),
@@ -156,8 +159,6 @@ fun LoginScreen(
                     )
                 )
                 Spacer(modifier = Modifier.height(13.dp))
-
-                var password by remember { mutableStateOf("") }
 
                 PasswordTextField(
                     modifier = Modifier
@@ -181,9 +182,7 @@ fun LoginScreen(
                 AppButton(
                     modifier = Modifier.width(170.dp),
                     onClick = {
-                        navController.navigate(Screen.Home.route) {
-                            popUpTo(Screen.Login.route) { inclusive = true }
-                        }
+                        authViewModel.login(email, password)
                     },
                     text = "Login",
                     symbol = Icons.Default.Check,
