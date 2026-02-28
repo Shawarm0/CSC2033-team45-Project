@@ -21,6 +21,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -46,13 +47,24 @@ import com.team45.mysustainablecity.ui.components.PasswordTextField
 import com.team45.mysustainablecity.ui.theme.BottomBarColor
 import com.team45.mysustainablecity.ui.theme.Primary
 import com.team45.mysustainablecity.ui.theme.TextColor
+import com.team45.mysustainablecity.viewmodel.AuthViewModel
 
 @Composable
 fun LoginScreen(
-    navController: NavController
+    navController: NavController,
+    authViewModel: AuthViewModel
 ) {
     val focusManager = LocalFocusManager.current
     val passwordFocusRequester = remember { FocusRequester() }
+
+
+
+    val isAuthenticated = authViewModel.isAuthenticated.collectAsState()
+    if (isAuthenticated.value) {
+        navController.navigate(Screen.Home.route) {
+            popUpTo(Screen.Login.route) { inclusive = true }
+        }
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),

@@ -46,10 +46,12 @@ import com.team45.mysustainablecity.ui.components.PasswordTextField
 import com.team45.mysustainablecity.ui.theme.BottomBarColor
 import com.team45.mysustainablecity.ui.theme.Primary
 import com.team45.mysustainablecity.ui.theme.TextColor
+import com.team45.mysustainablecity.viewmodel.AuthViewModel
 
 @Composable
 fun SignUpScreen(
-    navController: NavController
+    navController: NavController,
+    authViewModel: AuthViewModel
 ) {
     val focusManager = LocalFocusManager.current
     val emailFocusRequester = remember { FocusRequester() }
