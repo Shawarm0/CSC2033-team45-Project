@@ -30,9 +30,5 @@ object SupabaseClientProvider {
 
         httpEngine = OkHttp.create()
     }
-
-    /**
-     * Convenience reference to Supabase authentication module.
-     */
-    val auth = client.auth
+    var isAuth = false
 }

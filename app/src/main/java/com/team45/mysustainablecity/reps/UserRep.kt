@@ -4,24 +4,19 @@ import android.util.Log
 import com.team45.mysustainablecity.data.classes.User
 import com.team45.mysustainablecity.data.remote.SupabaseClientProvider
 import io.github.jan.supabase.auth.auth
-import io.github.jan.supabase.auth.exception.AuthRestException
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.auth.status.SessionStatus
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.mapLatest
-import kotlinx.coroutines.withContext
 import kotlin.time.ExperimentalTime
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
+import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
+import kotlin.uuid.ExperimentalUuidApi
 
+@OptIn(ExperimentalTime::class)
 class UserRep {
     private val client = SupabaseClientProvider.client
 
@@ -29,28 +24,15 @@ class UserRep {
     /**
      * Register user with Supabase Auth + insert profile
      */
+    @OptIn(ExperimentalUuidApi::class)
     suspend fun registerUser(
         email: String,
         password: String,
-        role: String
     ) {
-        val result = client.auth.signUpWith(Email) {
+        client.auth.signUpWith(Email) {
             this.email = email
             this.password = password
         }
-
-
-
-        val authUser = result ?: throw Exception("User creation failed")
-
-        client.from("users").insert(
-            mapOf(
-                "userID" to authUser.id,
-                "email" to email,
-                "role" to role,
-                "isActive" to true
-            )
-        )
     }
     //suspend because needs to pause without blocking main thread
     suspend fun loginUser(email: String, password: String) {
@@ -65,38 +47,54 @@ class UserRep {
         }
     }
 
-    @OptIn(ExperimentalUuidApi::class, ExperimentalCoroutinesApi::class)
-    fun observeSession(): Flow<User?> =
-        client.auth.sessionStatus
-            .mapLatest { status ->
-                when (status) {
-                    is SessionStatus.Authenticated -> {
-                        val authUser = status.session.user ?: return@mapLatest null
+    @OptIn(ExperimentalUuidApi::class)
+    fun observeSession(): Flow<User?> = flow {
 
-                        val profile = client
-                            .from("users")
-                            .select {
-                                filter { eq("userID", authUser.id) }
-                            }
-                            .decodeSingleOrNull<User>()
-                            ?: return@mapLatest null
+        Log.d("UserRep", "Starting session observation")
 
-                        User(
-                            userId = profile.userId,
-                            email = authUser.email ?: profile.email,
-                            role = profile.role,
-                            createdAt = profile.createdAt,
-                            isActive = profile.isActive,
-                            lastLoginAt = authUser.lastSignInAt
-                        )
-                    }
-                    else -> null
-                }
-            }
-            .flowOn(Dispatchers.IO)
+        val existing = client.auth.currentSessionOrNull()
 
-        suspend fun logout() {
-            client.auth.signOut()
+        if (existing != null) {
+            Log.d("UserRep", "Existing session found")
+            emit(loadUser(existing.user?.id))
+        } else {
+            Log.d("UserRep", "No existing session")
+            emit(null)
         }
 
+        client.auth.sessionStatus.collect { status ->
+
+            Log.d("UserRep", "Session status update: $status")
+
+            when (status) {
+                is SessionStatus.Authenticated -> {
+                    emit(loadUser(status.session.user?.id))
+                }
+
+                is SessionStatus.NotAuthenticated -> {
+                    emit(null)
+                }
+
+                else -> Unit
+            }
+        }
+    }.flowOn(Dispatchers.IO)
+
+    private suspend fun loadUser(id: String?): User? {
+        if (id == null) return null
+
+        Log.d("UserRep", "Loading profile for $id")
+
+        return client
+            .from("users")
+            .select {
+                filter { eq("userID", id) }
+            }
+            .decodeSingleOrNull<User>()
+    }
+
+
+    suspend fun logout() {
+        client.auth.signOut()
+    }
 }
