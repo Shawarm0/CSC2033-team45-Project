@@ -3,6 +3,7 @@ import java.util.Properties
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    kotlin("plugin.serialization") version "2.2.0"
 }
 
 android {
@@ -42,6 +43,8 @@ android {
         debug {
             buildConfigField("String","API_KEY","\"${localProperties.getProperty("API_KEY")}\"")
             buildConfigField("String","SUPABASE_URL","\"${localProperties.getProperty("SUPABASE_URL")}\"")
+            buildConfigField("String","MAPS_API_KEY","\"${localProperties.getProperty("MAPS_API_KEY")}\"")
+            manifestPlaceholders["MAPS_API_KEY"] = localProperties.getProperty("MAPS_API_KEY") ?: ""
         }
     }
     compileOptions {
@@ -55,7 +58,11 @@ android {
 }
 
 dependencies {
-
+    val mapsComposeVersion = "8.2.0"
+    implementation("com.google.maps.android:maps-compose:$mapsComposeVersion")
+    implementation("com.google.maps.android:maps-compose-utils:$mapsComposeVersion")
+    implementation("com.google.maps.android:maps-compose-widgets:$mapsComposeVersion")
+    implementation("com.google.android.gms:play-services-maps:20.0.0")
     implementation(libs.androidx.compose.animation.core)
     // Supabase Version
     var supabaseVersion = "3.0.0"
