@@ -93,6 +93,24 @@ class UserRep {
             .decodeSingleOrNull<User>()
     }
 
+    /**
+     * Update a user in Supabase
+     */
+    private suspend fun updateUser(user: User): Boolean {
+        Log.d("UserRep", "Updating user profile for ${user.userID}")
+        try {
+            client.from("users").update(user) {
+                filter {
+                    eq("userID", user.userID)
+                }
+            }
+            return true
+        } catch (e: Exception) {
+            Log.e("UserRep", "Failed to update user profile: ${e.message}")
+            return false
+        }
+    }
+
 
     suspend fun logout() {
         client.auth.signOut()
