@@ -3,6 +3,7 @@ import java.util.Properties
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    kotlin("plugin.serialization") version "2.2.0"
 }
 
 android {
@@ -42,6 +43,8 @@ android {
         debug {
             buildConfigField("String","API_KEY","\"${localProperties.getProperty("API_KEY")}\"")
             buildConfigField("String","SUPABASE_URL","\"${localProperties.getProperty("SUPABASE_URL")}\"")
+            buildConfigField("String","MAPS_API_KEY","\"${localProperties.getProperty("MAPS_API_KEY")}\"")
+            manifestPlaceholders["MAPS_API_KEY"] = localProperties.getProperty("MAPS_API_KEY") ?: ""
         }
     }
     compileOptions {
@@ -55,7 +58,16 @@ android {
 }
 
 dependencies {
-
+    val mapsComposeVersion = "8.2.0"
+    implementation("com.google.maps.android:maps-compose:$mapsComposeVersion")
+    implementation("com.google.maps.android:maps-compose-utils:$mapsComposeVersion")
+    implementation("com.google.maps.android:maps-compose-widgets:$mapsComposeVersion")
+    implementation("com.google.android.gms:play-services-maps:20.0.0")
+    // Unit testing
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
+    testImplementation("io.mockk:mockk:1.13.7")
+    testImplementation("app.cash.turbine:turbine:1.0.0")
     implementation(libs.androidx.compose.animation.core)
     // Supabase Version
     var supabaseVersion = "3.0.0"
@@ -85,7 +97,6 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
-    testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))

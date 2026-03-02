@@ -1,5 +1,6 @@
 package com.team45.mysustainablecity.data.remote
 
+import com.team45.mysustainablecity.BuildConfig
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.auth.auth
@@ -16,9 +17,9 @@ object SupabaseClientProvider {
     /**
      * Initialized Supabase client with installed modules and HTTP engine.
      */
-    val client: SupabaseClient = createSupabaseClient(
-        supabaseUrl = "",
-        supabaseKey = "",
+    val client = createSupabaseClient(
+        supabaseUrl = BuildConfig.SUPABASE_URL,
+        supabaseKey = BuildConfig.API_KEY,
     ) {
         install(Postgrest)
         install(Realtime)
@@ -29,9 +30,5 @@ object SupabaseClientProvider {
 
         httpEngine = OkHttp.create()
     }
-
-    /**
-     * Convenience reference to Supabase authentication module.
-     */
-    val auth = client.auth
+    var isAuth = false
 }

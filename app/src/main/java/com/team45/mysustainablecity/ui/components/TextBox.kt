@@ -153,6 +153,8 @@ fun CustomTextField(
             }
         }
 
+        Spacer(modifier = Modifier.height(5.dp))
+
         BasicTextField(
             value = value,
             onValueChange = { newValue ->
