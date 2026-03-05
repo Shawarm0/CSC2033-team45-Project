@@ -88,7 +88,7 @@ class UserRep {
         return client
             .from("users")
             .select {
-                filter { eq("userID", id) }
+                filter { eq("user_id", id) }
             }
             .decodeSingleOrNull<User>()
     }
@@ -101,7 +101,7 @@ class UserRep {
         try {
             client.from("users").update(user) {
                 filter {
-                    eq("userID", user.userID)
+                    eq("user_id", user.userID)
                 }
             }
             return true
