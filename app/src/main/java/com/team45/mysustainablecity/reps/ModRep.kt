@@ -1,5 +1,7 @@
 package com.team45.mysustainablecity.reps
 
+import com.team45.mysustainablecity.data.classes.Moderation
+import com.team45.mysustainablecity.data.classes.Post
 import com.team45.mysustainablecity.data.remote.SupabaseClientProvider
 import kotlinx.coroutines.flow.StateFlow
 import kotlin.uuid.ExperimentalUuidApi
