@@ -29,7 +29,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.team45.mysustainablecity.ui.components.BottomBar
-import com.team45.mysustainablecity.ui.screens.AlertScreen
 import com.team45.mysustainablecity.ui.screens.DiscoverScreen
 import com.team45.mysustainablecity.ui.screens.HomeScreen
 import com.team45.mysustainablecity.ui.screens.LoginScreen
@@ -206,7 +205,7 @@ fun AppNavigation(
     ) {
         composable(Screen.Login.route) { LoginScreen(rootNavController, authViewModel) }
         composable(Screen.SignUp.route) { SignUpScreen(rootNavController, authViewModel) }
-        composable(Screen.Home.route) { MainScaffold() }
+        composable(Screen.Home.route) { MainScaffold(authViewModel) }
     }
 }
 
@@ -216,6 +215,7 @@ fun AppNavigation(
 
 @Composable
 fun MainScaffold(
+    authViewModel: AuthViewModel
 ) {
     val innerNavController = rememberNavController()
     val currentBackStackEntry by innerNavController.currentBackStackEntryAsState()
@@ -264,10 +264,10 @@ fun MainScaffold(
                 HomeScreen(innerNavController)
             }
             composable(Screen.Discover.route) {
-                DiscoverScreen(innerNavController)
+                DiscoverScreen(innerNavController, authViewModel)
             }
             composable(Screen.Alerts.route) {
-                AlertScreen(innerNavController)
+                //AlertScreen(innerNavController)
             }
         }
     }

@@ -21,9 +21,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -88,6 +90,7 @@ fun CustomTextField(
     maxLines: Int = 1,
 
     clearButton: Boolean = false,
+    shadow: Boolean = false,
 
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
@@ -193,61 +196,77 @@ fun CustomTextField(
                 },
             decorationBox = { innerTextField ->
 
-                Row(
+                Box(
                     modifier = Modifier
-                        .border(
-                            width = 1.dp,
-                            color = borderColor,
-                            shape = RoundedCornerShape(50)
+                        .then(
+                            if (shadow) {
+                                Modifier.shadow(
+                                    elevation = 6.dp,
+                                    shape = RoundedCornerShape(50),
+                                    clip = false
+                                )
+                            } else {
+                                Modifier
+                            }
                         )
-                        .background(
-                            color = LightBoxBackground,
-                            shape = RoundedCornerShape(50)
-                        )
-                        .padding(horizontal = 12.dp, vertical = 10.dp),
-                    verticalAlignment = Alignment.CenterVertically
                 ) {
 
-                    // Leading slot
-                    if (leadingContent != null) {
-                        leadingContent()
-                        Spacer(modifier = Modifier.width(8.dp))
-                    }
-
-                    Box {
-                        if (value.isEmpty()) {
-                            Text(
-                                text = placeholder,
-                                color = if (!isFocused) Color.Gray else Color.Black,
-                                style = MaterialTheme.typography.bodyLarge
+                    Row(
+                        modifier = Modifier
+                            .border(
+                                width = 1.dp,
+                                color = borderColor,
+                                shape = RoundedCornerShape(50)
                             )
-                        }
-                        innerTextField()
-                    }
-
-                    Spacer(modifier = Modifier.weight(1f))
-
-                    // Clear button (original sizing restored)
-                    if (clearButton && value.isNotEmpty() && enabled && !readOnly) {
-                        IconButton(
-                            onClick = { onValueChange("") },
-                            modifier = Modifier
-                                .padding(0.dp)
-                                .width(30.dp)
-                                .height(20.dp),
-                            interactionSource = remember { MutableInteractionSource() }
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Close,
-                                contentDescription = "Clear Text",
-                                tint = iconColor
+                            .background(
+                                color = LightBoxBackground,
+                                shape = RoundedCornerShape(50)
                             )
-                        }
-                    }
+                            .padding(horizontal = 12.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
 
-                    // Trailing slot
-                    if (trailingContent != null) {
-                        trailingContent()
+                        // Leading slot
+                        if (leadingContent != null) {
+                            leadingContent()
+                            Spacer(modifier = Modifier.width(8.dp))
+                        }
+
+                        Box {
+                            if (value.isEmpty()) {
+                                Text(
+                                    text = placeholder,
+                                    color = if (!isFocused) Color.Gray else Color.Black,
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+                            }
+                            innerTextField()
+                        }
+
+                        Spacer(modifier = Modifier.weight(1f))
+
+                        // Clear button (original sizing restored)
+                        if (clearButton && value.isNotEmpty() && enabled && !readOnly) {
+                            IconButton(
+                                onClick = { onValueChange("") },
+                                modifier = Modifier
+                                    .padding(0.dp)
+                                    .width(30.dp)
+                                    .height(20.dp),
+                                interactionSource = remember { MutableInteractionSource() }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Close,
+                                    contentDescription = "Clear Text",
+                                    tint = iconColor
+                                )
+                            }
+                        }
+
+                        // Trailing slot
+                        if (trailingContent != null) {
+                            trailingContent()
+                        }
                     }
                 }
             }
