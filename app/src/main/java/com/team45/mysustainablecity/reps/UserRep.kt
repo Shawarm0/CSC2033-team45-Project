@@ -1,6 +1,7 @@
 package com.team45.mysustainablecity.reps
 
 import android.util.Log
+import com.team45.mysustainablecity.data.classes.Alert
 import com.team45.mysustainablecity.data.classes.User
 import com.team45.mysustainablecity.data.remote.SupabaseClientProvider
 import io.github.jan.supabase.auth.auth
@@ -9,6 +10,7 @@ import io.github.jan.supabase.auth.status.SessionStatus
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
@@ -95,7 +97,7 @@ class UserRep {
     /**
      * Update a user in Supabase
      */
-    private suspend fun updateUser(user: User): Boolean {
+    suspend fun updateUser(user: User): Boolean {
         Log.d("UserRep", "Updating user profile for ${user.userID}")
         try {
             client.from("users").update(user) {
@@ -111,7 +113,7 @@ class UserRep {
     }
 
 
-    private suspend fun deleteUser(id: String?): Boolean {
+    suspend fun deleteUser(id: String?): Boolean {
         if (id == null) return false
 
         Log.d("UserRep", "Attempting to delete user profile for $id")
@@ -129,7 +131,7 @@ class UserRep {
         }
     }
 
-    private suspend fun getSelf(): User? {
+    suspend fun getSelf(): User? {
         val currentUser = client.auth.currentUserOrNull()
         if (currentUser != null) {
             Log.d("UserRep", "Found currently authenticated user ${currentUser.id}, returning...")
@@ -140,20 +142,20 @@ class UserRep {
         }
     }
 
-    private suspend fun getAlerts(id: String?): StateFlow<List<Alert>> {
-        Log.d("UserRep", "Getting alerts for user $id")
-        if (id == null) return emptyList()
+    suspend fun getAlerts(id: String?): StateFlow<List<Alert>> {
+        val alertsFlow = MutableStateFlow<List<Alert>>(emptyList())
+
+        if (id == null) return alertsFlow
+
         try {
             val alerts = client.from("alerts").select {
                 filter { eq("user_id", id) }
             }.decodeList<Alert>()
-            Log.d("UserRep", "Alerts: $alerts")
-            return alerts
-
+            alertsFlow.value = alerts
         } catch (e: Exception) {
             Log.e("UserRep", "Failed to get alerts: ${e.message}")
-            return emptyList<Alert>()
         }
+        return alertsFlow
     }
 
     suspend fun logout() {
