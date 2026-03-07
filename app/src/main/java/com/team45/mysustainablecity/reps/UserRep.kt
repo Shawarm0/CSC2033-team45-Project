@@ -12,8 +12,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlin.time.ExperimentalTime
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import kotlin.uuid.ExperimentalUuidApi
 
 @OptIn(ExperimentalTime::class)
@@ -112,7 +110,7 @@ class UserRep {
     }
 
 
-    suspend fun deleteUser(id: String?): Boolean {
+    private suspend fun deleteUser(id: String?): Boolean {
         if (id == null) return false
 
         Log.d("UserRep", "Attempting to delete user profile for $id")
@@ -129,6 +127,18 @@ class UserRep {
             return false
         }
     }
+
+    private suspend fun getSelf(): User? {
+        val currentUser = client.auth.currentUserOrNull()
+        if (currentUser != null) {
+            Log.d("UserRep", "Found currently authenticated user ${currentUser.id}, returning...")
+            return loadUser(currentUser.id)
+        } else {
+            Log.d("UserRep", "No user currently authenticated")
+            return null
+        }
+    }
+
 
     suspend fun logout() {
         client.auth.signOut()
