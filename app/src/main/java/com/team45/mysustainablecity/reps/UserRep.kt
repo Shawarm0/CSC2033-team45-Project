@@ -115,13 +115,14 @@ class UserRep {
     suspend fun deleteUser(id: String?): Boolean {
         if (id == null) return false
 
-        Log.d("UserRep", "Deleting user profile for $id")
+        Log.d("UserRep", "Attempting to delete user profile for $id")
         try {
             client.from("users").delete {
                 filter {
                     eq("user_id", id)
                 }
             }
+            Log.d("UserRep", "Successfully deleted user profile for $id")
             return true
         } catch (e: Exception) {
             Log.e("UserRep", "Failed to delete user profile: ${e.message}")
