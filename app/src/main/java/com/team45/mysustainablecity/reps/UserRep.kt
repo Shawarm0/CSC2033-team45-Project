@@ -9,6 +9,7 @@ import io.github.jan.supabase.auth.status.SessionStatus
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlin.time.ExperimentalTime
@@ -139,6 +140,21 @@ class UserRep {
         }
     }
 
+    private suspend fun getAlerts(id: String?): StateFlow<List<Alert>> {
+        Log.d("UserRep", "Getting alerts for user $id")
+        if (id == null) return emptyList()
+        try {
+            val alerts = client.from("alerts").select {
+                filter { eq("user_id", id) }
+            }.decodeList<Alert>()
+            Log.d("UserRep", "Alerts: $alerts")
+            return alerts
+
+        } catch (e: Exception) {
+            Log.e("UserRep", "Failed to get alerts: ${e.message}")
+            return emptyList<Alert>()
+        }
+    }
 
     suspend fun logout() {
         client.auth.signOut()
