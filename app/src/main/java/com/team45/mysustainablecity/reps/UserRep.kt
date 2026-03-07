@@ -151,6 +151,7 @@ class UserRep {
             val alerts = client.from("alerts").select {
                 filter { eq("user_id", id) }
             }.decodeList<Alert>()
+            Log.d("UserRep", "Alerts: $alerts")
             alertsFlow.value = alerts
         } catch (e: Exception) {
             Log.e("UserRep", "Failed to get alerts: ${e.message}")

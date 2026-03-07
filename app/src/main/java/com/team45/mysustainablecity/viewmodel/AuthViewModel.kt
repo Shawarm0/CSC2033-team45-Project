@@ -111,6 +111,7 @@ class AuthViewModel(
                 val result = userRep.updateUser(user)
                 if (result) {
                     _authState.value = user
+                    Log.d("AuthViewModel", "successfully updated user")
                 }
                 _operationSuccess.value = result
 
@@ -137,6 +138,7 @@ class AuthViewModel(
                 if (result) {
                     _authState.value = null
                     _isAuthenticated.value = false
+                    Log.d("AuthViewModel", "successfully deleted user")
                 }
 
             } catch (e: Exception) {
@@ -157,7 +159,8 @@ class AuthViewModel(
             try {
                 val user = userRep.getSelf()
                 _authState.value = user
-                _isAuthenticated.value = user != null
+                _isAuthenticated.value = client.auth.currentSessionOrNull()?.user?.id != null
+                Log.d("AuthViewModel", "successfully loaded self $user")
 
             } catch (e: Exception) {
                 Log.e("AuthViewModel", "Failed to load user: ${e.message}")
@@ -172,6 +175,7 @@ class AuthViewModel(
         viewModelScope.launch {
             try {
                 userRep.getAlerts(userId).collect { alertsList ->
+                    Log.d("AuthViewModel", "successfully loaded alerts $alertsList")
                     _alerts.value = alertsList
                 }
 
