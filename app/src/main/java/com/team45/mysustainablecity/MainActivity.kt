@@ -165,17 +165,14 @@ fun AppNavigation(
     val isAuthenticated by authViewModel.isAuthenticated.collectAsState()
     val isSessionReady by authViewModel.isSessionReady.collectAsState()
 
+    // Don't render anything until session is resolved — splash screen holds during this
     if (!isSessionReady) return
 
-    val startDestination = if (isAuthenticated) {
-        Screen.Home.route
-    } else {
-        Screen.Login.route
-    }
+    val startDestination = if (isAuthenticated) Screen.Home.route else Screen.Login.route
 
     NavHost(
         navController = rootNavController,
-        startDestination = Screen.Login.route,
+        startDestination = startDestination,
         enterTransition = {
             val from = initialState.destination.route
             val to = targetState.destination.route

@@ -54,32 +54,24 @@ class UserRep {
 
     @OptIn(ExperimentalUuidApi::class)
     fun observeSession(): Flow<User?> = flow {
-
         Log.d("UserRep", "Starting session observation")
 
+        // Emit based on existing session FIRST before collecting status updates
         val existing = client.auth.currentSessionOrNull()
-
         if (existing != null) {
             Log.d("UserRep", "Existing session found")
             emit(loadUser(existing.user?.id))
         } else {
             Log.d("UserRep", "No existing session")
-            emit(null)
+            emit(null)  // Only emit null if we genuinely have no session
         }
 
+        // Then continue watching for changes (login/logout events)
         client.auth.sessionStatus.collect { status ->
-
             Log.d("UserRep", "Session status update: $status")
-
             when (status) {
-                is SessionStatus.Authenticated -> {
-                    emit(loadUser(status.session.user?.id))
-                }
-
-                is SessionStatus.NotAuthenticated -> {
-                    emit(null)
-                }
-
+                is SessionStatus.Authenticated -> emit(loadUser(status.session.user?.id))
+                is SessionStatus.NotAuthenticated -> emit(null)
                 else -> Unit
             }
         }

@@ -61,14 +61,14 @@ fun LoginScreen(
     val isAuthenticated = authViewModel.isAuthenticated.collectAsState()
     val focusManager = LocalFocusManager.current
     val passwordFocusRequester = remember { FocusRequester() }
-
-    LaunchedEffect(isAuthenticated.value) {
-        if (isAuthenticated.value) {
-            navController.navigate(Screen.Home.route) {
-                popUpTo(Screen.Login.route) { inclusive = true }
-            }
-        }
-    }
+//
+//    LaunchedEffect(isAuthenticated.value) {
+//        if (isAuthenticated.value) {
+//            navController.navigate(Screen.Home.route) {
+//                popUpTo(Screen.Login.route) { inclusive = true }
+//            }
+//        }
+//    }
 
 
     var email by remember { mutableStateOf("") }

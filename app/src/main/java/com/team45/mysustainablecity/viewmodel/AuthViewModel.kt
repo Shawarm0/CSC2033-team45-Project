@@ -8,6 +8,7 @@ import com.team45.mysustainablecity.data.remote.SupabaseClientProvider
 import com.team45.mysustainablecity.reps.UserRep
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.exception.AuthRestException
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -45,6 +46,7 @@ class AuthViewModel(
                 _authState.value = user
                 _isAuthenticated.value = client.auth.currentSessionOrNull()?.user?.id != null
 
+                delay(500)
                 _isSessionReady.value = true
 
                 if (user != null) {

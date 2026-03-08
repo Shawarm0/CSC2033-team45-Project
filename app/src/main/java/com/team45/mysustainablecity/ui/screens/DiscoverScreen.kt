@@ -21,9 +21,6 @@ fun DiscoverScreen(
         onClick = {
             authViewModel.logout()
             Log.d("DiscoverScreen", "Logout request sent\n\n")
-            rootNavController.navigate(Screen.Login.route) {
-                popUpTo(Screen.Home.route) { inclusive = true }
-            }
         }
     ) {
         Text("LogOut")
