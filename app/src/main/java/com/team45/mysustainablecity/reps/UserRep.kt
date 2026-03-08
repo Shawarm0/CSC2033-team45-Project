@@ -176,4 +176,17 @@ class UserRep {
             return false
         }
     }
+
+    suspend fun markAllRead(): Boolean {
+        try {
+            client.from("alerts").update(mapOf("is_read" to true)) {
+                filter { eq("user_id", getSelf()?.userID ?: error("User ID is null")) }     // return false if the userID is null
+            }
+            Log.d("UserRep", "Successfully marked as read all alerts for user ${getSelf()?.userID}")
+            return true
+        } catch (e: Exception) {
+            Log.e("UserRep", "Failed to mark all alerts as read: ${e.message}")
+            return false
+        }
+    }
 }
