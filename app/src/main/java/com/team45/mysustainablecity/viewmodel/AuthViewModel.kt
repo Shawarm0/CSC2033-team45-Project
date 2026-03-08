@@ -3,6 +3,7 @@ package com.team45.mysustainablecity.viewmodel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.team45.mysustainablecity.data.classes.Alert
 import com.team45.mysustainablecity.data.classes.User
 import com.team45.mysustainablecity.data.remote.SupabaseClientProvider
 import com.team45.mysustainablecity.reps.UserRep
@@ -26,6 +27,9 @@ class AuthViewModel(
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
+
+    private val _operationSuccess = MutableStateFlow<Boolean?>(null)
+    val operationSuccess: StateFlow<Boolean?> = _operationSuccess
 
     private val _errorState = MutableStateFlow<String?>(null)
     val errorState: StateFlow<String?> = _errorState
@@ -89,6 +93,74 @@ class AuthViewModel(
                 _errorState.value = e.message
             } finally {
                 _isLoading.value = false
+            }
+        }
+    }
+
+    /**
+     * Update user profile
+     */
+    fun updateUser(user: User) {
+        viewModelScope.launch {
+            _isLoading.value = true
+
+            try {
+                val result = userRep.updateUser(user)
+                if (result) {
+                    _authState.value = user
+                    Log.d("AuthViewModel", "successfully updated user")
+                }
+                _operationSuccess.value = result
+
+
+            } catch (e: Exception) {
+                Log.e("AuthViewModel", "Update user failed: ${e.message}")
+                _operationSuccess.value = false
+            }
+            _isLoading.value = false
+        }
+    }
+
+    /**
+     * Delete user account
+     */
+    fun deleteUser(userId: String?) {
+        viewModelScope.launch {
+            _isLoading.value = true
+
+            try {
+                val result = userRep.deleteUser(userId)
+                _operationSuccess.value = result
+
+                if (result) {
+                    _authState.value = null
+                    _isAuthenticated.value = false
+                    Log.d("AuthViewModel", "successfully deleted user")
+                }
+
+            } catch (e: Exception) {
+                Log.e("AuthViewModel", "Delete user failed: ${e.message}")
+                _operationSuccess.value = false
+            }
+
+            _isLoading.value = false
+        }
+    }
+
+
+    /**
+     * Load current user from database
+     */
+    fun loadSelf() {
+        viewModelScope.launch {
+            try {
+                val user = userRep.getSelf()
+                _authState.value = user
+                _isAuthenticated.value = client.auth.currentSessionOrNull()?.user?.id != null
+                Log.d("AuthViewModel", "successfully loaded self $user")
+
+            } catch (e: Exception) {
+                Log.e("AuthViewModel", "Failed to load user: ${e.message}")
             }
         }
     }

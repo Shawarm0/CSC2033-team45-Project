@@ -1,6 +1,7 @@
 package com.team45.mysustainablecity.reps
 
 import android.util.Log
+import com.team45.mysustainablecity.data.classes.Alert
 import com.team45.mysustainablecity.data.classes.User
 import com.team45.mysustainablecity.data.remote.SupabaseClientProvider
 import io.github.jan.supabase.auth.auth
@@ -9,11 +10,11 @@ import io.github.jan.supabase.auth.status.SessionStatus
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlin.time.ExperimentalTime
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import kotlin.uuid.ExperimentalUuidApi
 
 @OptIn(ExperimentalTime::class)
@@ -45,6 +46,10 @@ class UserRep {
         } catch (e: Exception) {
             Log.e("UserRep", "Login failed: ${e.message}")
         }
+    }
+
+    suspend fun logout() {
+        client.auth.signOut()
     }
 
     @OptIn(ExperimentalUuidApi::class)
@@ -81,7 +86,10 @@ class UserRep {
     }.flowOn(Dispatchers.IO)
 
     private suspend fun loadUser(id: String?): User? {
-        if (id == null) return null
+        if (id == null) {
+            Log.e("UserRep", "Failed to load profile: User ID is null")
+            return null
+        }
 
         Log.d("UserRep", "Loading profile for $id")
 
@@ -96,7 +104,7 @@ class UserRep {
     /**
      * Update a user in Supabase
      */
-    private suspend fun updateUser(user: User): Boolean {
+    suspend fun updateUser(user: User): Boolean {
         Log.d("UserRep", "Updating user profile for ${user.userID}")
         try {
             client.from("users").update(user) {
@@ -112,7 +120,131 @@ class UserRep {
     }
 
 
-    suspend fun logout() {
-        client.auth.signOut()
+    suspend fun deleteUser(id: String?): Boolean {
+        if (id == null) {
+            Log.e("UserRep", "Failed to delete user: User ID is null")
+            return false
+        }
+
+        Log.d("UserRep", "Attempting to delete user profile for $id")
+        try {
+            client.from("users").delete {
+                filter {
+                    eq("user_id", id)
+                }
+            }
+            Log.d("UserRep", "Successfully deleted user profile for $id")
+            return true
+        } catch (e: Exception) {
+            Log.e("UserRep", "Failed to delete user profile: ${e.message}")
+            return false
+        }
+    }
+
+    suspend fun getSelf(): User? {
+        val currentUser = client.auth.currentUserOrNull()
+        if (currentUser != null) {
+            Log.d("UserRep", "Found currently authenticated user ${currentUser.id}, returning...")
+            return loadUser(currentUser.id)
+        } else {
+            Log.d("UserRep", "No user currently authenticated")
+            return null
+        }
+    }
+
+    suspend fun getAlerts(id: String?): StateFlow<List<Alert>> {
+        val alertsFlow = MutableStateFlow<List<Alert>>(emptyList())
+
+        if (id == null) return alertsFlow
+
+        try {
+            val alerts = client.from("alerts").select {
+                filter { eq("user_id", id) }
+            }.decodeList<Alert>()
+            Log.d("UserRep", "Alerts: $alerts")
+            alertsFlow.value = alerts
+        } catch (e: Exception) {
+            Log.e("UserRep", "Failed to get alerts: ${e.message}")
+        }
+        return alertsFlow
+    }
+
+    suspend fun markAlertRead(alertId: String?): Boolean {
+        if (alertId == null) {
+            Log.e("UserRep", "Failed to mark alert as read: Alert ID is null")
+            return false
+        }
+
+        try {
+            client.from("alerts").update(mapOf("is_read" to true)) {    // Set is_read field to true, no need to check if its false before
+                filter { eq("alert_id", alertId) }
+            }
+            Log.d("UserRep", "Successfully marked alert: $alertId as read")
+            return true
+        } catch (e: Exception) {
+            Log.e("UserRep", "Failed to mark alert as read: ${e.message}")
+            return false
+        }
+    }
+
+    suspend fun markAllRead(): Boolean {
+        try {
+            val userID = getSelf()?.userID
+
+            if (userID == null) {
+                Log.e("UserRep", "Failed to mark all alerts as read: User ID is null")
+                return false
+            }
+
+            client.from("alerts").update(mapOf("is_read" to true)) {
+                filter { eq("user_id", userID) }
+            }
+            Log.d("UserRep", "Successfully marked as read all alerts for user ${getSelf()?.userID}")
+            return true
+        } catch (e: Exception) {
+            Log.e("UserRep", "Failed to mark all alerts as read: ${e.message}")
+            return false
+        }
+    }
+
+    suspend fun deleteAlert(alertId: String?): Boolean {
+        if (alertId == null) {
+            Log.e("UserRep", "Failed to delete alert: Alert ID is null")
+            return false
+        }
+
+        try {
+            client.from("alerts").delete {
+                filter { eq("alert_id", alertId) }
+            }
+            Log.d("UserRep", "Successfully deleted alert: $alertId")
+            return true
+        } catch (e: Exception) {
+            Log.e("UserRep", "Failed to delete alert: ${e.message}")
+            return false
+        }
+    }
+
+    suspend fun clearAlerts(): Boolean {
+        try {
+            val userID = getSelf()?.userID
+
+            if (userID == null) {
+                Log.e("UserRep", "Failed to clear alerts: User ID is null")
+                return false
+            }
+
+            client.from("alerts").delete {
+                filter {
+                    eq("user_id", userID)
+                    eq("is_read", true)
+                }
+            }
+            Log.d("UserRep", "Successfully clear alerts for user ${getSelf()?.userID}")
+            return true
+        } catch (e: Exception) {
+            Log.e("UserRep", "Failed to clear alerts: ${e.message}")
+            return false
+        }
     }
 }
