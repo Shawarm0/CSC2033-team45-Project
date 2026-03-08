@@ -28,15 +28,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.LineHeightStyle
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.team45.mysustainablecity.data.remote.SupabaseClientProvider
 import com.team45.mysustainablecity.ui.components.BottomBar
 import com.team45.mysustainablecity.ui.screens.DiscoverScreen
 import com.team45.mysustainablecity.ui.screens.HomeScreen
@@ -46,6 +50,7 @@ import com.team45.mysustainablecity.ui.theme.Background
 import com.team45.mysustainablecity.ui.theme.MySustainableCityTheme
 import com.team45.mysustainablecity.utils.AppContainer
 import com.team45.mysustainablecity.viewmodel.AuthViewModel
+import io.github.jan.supabase.auth.auth
 
 /**
  * The main entry point of the app
@@ -56,10 +61,13 @@ class MainActivity : ComponentActivity() {
     val authViewModel = AuthViewModel(userRep = appContainer.userRepository)
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        val splashScreen = installSplashScreen()
+
         super.onCreate(savedInstanceState)
-        Log.d("MainActivity", "onCreate() called")
+
 
         enableEdgeToEdge()
+
         setContent {
             MySustainableCityTheme {
                 val rootNavController = rememberNavController()
@@ -152,17 +160,10 @@ fun AppNavigation(
     rootNavController: NavHostController,
     authViewModel: AuthViewModel
 ) {
-    val isAuthenticated = authViewModel.isAuthenticated.collectAsState()
-
-    val startDestination = if (isAuthenticated.value) {
-        Screen.Home.route
-    } else {
-        Screen.Login.route
-    }
 
     NavHost(
         navController = rootNavController,
-        startDestination = startDestination,
+        startDestination = Screen.Login.route,
         enterTransition = {
             val from = initialState.destination.route
             val to = targetState.destination.route

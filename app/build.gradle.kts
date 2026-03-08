@@ -80,7 +80,6 @@ dependencies {
     implementation("io.ktor:ktor-client-okhttp:$ktorVersion")
 
 
-
     // This is to get the icons imported
 
     implementation("androidx.compose.material:material-icons-extended:1.7.8")
@@ -88,6 +87,9 @@ dependencies {
     // This is for the navigation graph.
     val nav_version = "2.9.7"
     implementation("androidx.navigation:navigation-compose:$nav_version")
+
+
+    implementation(libs.core.splashscreen)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
