@@ -86,7 +86,10 @@ class UserRep {
     }.flowOn(Dispatchers.IO)
 
     private suspend fun loadUser(id: String?): User? {
-        if (id == null) return null
+        if (id == null) {
+            Log.e("UserRep", "Failed to load profile: User ID is null")
+            return null
+        }
 
         Log.d("UserRep", "Loading profile for $id")
 
@@ -118,7 +121,10 @@ class UserRep {
 
 
     suspend fun deleteUser(id: String?): Boolean {
-        if (id == null) return false
+        if (id == null) {
+            Log.e("UserRep", "Failed to delete user: User ID is null")
+            return false
+        }
 
         Log.d("UserRep", "Attempting to delete user profile for $id")
         try {
@@ -164,7 +170,11 @@ class UserRep {
     }
 
     suspend fun markAlertRead(alertId: String?): Boolean {
-        if (alertId == null) return false
+        if (alertId == null) {
+            Log.e("UserRep", "Failed to mark alert as read: Alert ID is null")
+            return false
+        }
+
         try {
             client.from("alerts").update(mapOf("is_read" to true)) {    // Set is_read field to true, no need to check if its false before
                 filter { eq("alert_id", alertId) }
@@ -186,6 +196,24 @@ class UserRep {
             return true
         } catch (e: Exception) {
             Log.e("UserRep", "Failed to mark all alerts as read: ${e.message}")
+            return false
+        }
+    }
+
+    suspend fun deleteAlert(alertId: String?): Boolean {
+        if (alertId == null) {
+            Log.e("UserRep", "Failed to delete alert: Alert ID is null")
+            return false
+        }
+
+        try {
+            client.from("alerts").delete {
+                filter { eq("alert_id", alertId) }
+            }
+            Log.d("UserRep", "Successfully deleted alert: $alertId")
+            return true
+        } catch (e: Exception) {
+            Log.e("UserRep", "Failed to delete alert: ${e.message}")
             return false
         }
     }
