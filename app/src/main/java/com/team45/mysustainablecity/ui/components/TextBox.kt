@@ -26,7 +26,6 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -37,7 +36,7 @@ import kotlinx.coroutines.launch
 
 
 /**
- * A fully customisable rounded text input field built on top of [BasicTextField].
+ * A fully customizable rounded text input field built on top of [BasicTextField].
  *
  * This composable provides:
  * - Optional label and inline error message
@@ -45,10 +44,10 @@ import kotlinx.coroutines.launch
  * - Leading and trailing content slots (e.g. icons)
  * - Optional clear button
  * - Error state styling
- * - Focus-aware border and text colour changes
+ * - Focus-aware border and text color changes
  * - Keyboard configuration (IME actions, input types, etc.)
  * - Optional numeric filtering via [floatsOnly]
- * - Automatic bring-into-view behaviour when focused
+ * - Automatic bring-into-view behavior when focused
  *
  * @param value The current text value displayed inside the field.
  * @param onValueChange Callback triggered when the text changes.
@@ -290,7 +289,7 @@ fun CustomTextField(
  * - Masks input by default using [PasswordVisualTransformation]
  * - Provides a trailing visibility toggle icon
  * - Supports custom keyboard options and IME actions
- * - Inherits styling and behaviour from [CustomTextField]
+ * - Inherits styling and behavior from [CustomTextField]
  *
  * @param modifier Modifier applied to the text field.
  * @param value The current password value.
