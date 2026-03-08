@@ -48,6 +48,10 @@ class UserRep {
         }
     }
 
+    suspend fun logout() {
+        client.auth.signOut()
+    }
+
     @OptIn(ExperimentalUuidApi::class)
     fun observeSession(): Flow<User?> = flow {
 
@@ -159,7 +163,16 @@ class UserRep {
         return alertsFlow
     }
 
-    suspend fun logout() {
-        client.auth.signOut()
+    suspend fun markAlertRead(alertId: String?): Boolean {
+        if (alertId == null) return false
+        try {
+            client.from("alerts").update(mapOf("is_read" to true)) {    // Set is_read field to true, no need to check if its false before
+                filter { eq("alert_id", alertId) }
+            }
+            return true
+        } catch (e: Exception) {
+            Log.e("UserRep", "Failed to mark alert as read: ${e.message}")
+            return false
+        }
     }
 }
