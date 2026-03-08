@@ -62,9 +62,11 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
-
         super.onCreate(savedInstanceState)
 
+        splashScreen.setKeepOnScreenCondition {
+            !authViewModel.isSessionReady.value
+        }
 
         enableEdgeToEdge()
 
@@ -160,6 +162,16 @@ fun AppNavigation(
     rootNavController: NavHostController,
     authViewModel: AuthViewModel
 ) {
+    val isAuthenticated by authViewModel.isAuthenticated.collectAsState()
+    val isSessionReady by authViewModel.isSessionReady.collectAsState()
+
+    if (!isSessionReady) return
+
+    val startDestination = if (isAuthenticated) {
+        Screen.Home.route
+    } else {
+        Screen.Login.route
+    }
 
     NavHost(
         navController = rootNavController,
