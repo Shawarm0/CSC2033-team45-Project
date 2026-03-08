@@ -189,8 +189,15 @@ class UserRep {
 
     suspend fun markAllRead(): Boolean {
         try {
+            val userID = getSelf()?.userID
+
+            if (userID == null) {
+                Log.e("UserRep", "Failed to mark all alerts as read: User ID is null")
+                return false
+            }
+
             client.from("alerts").update(mapOf("is_read" to true)) {
-                filter { eq("user_id", getSelf()?.userID ?: error("User ID is null")) }     // return false if the userID is null
+                filter { eq("user_id", userID) }
             }
             Log.d("UserRep", "Successfully marked as read all alerts for user ${getSelf()?.userID}")
             return true
