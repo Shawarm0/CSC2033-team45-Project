@@ -12,11 +12,10 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import kotlin.uuid.ExperimentalUuidApi
+
 class AuthViewModel(
     private val userRep: UserRep,
 ): ViewModel() {
-
     private val client = SupabaseClientProvider.client
 
     private val _authState = MutableStateFlow<User?>(null)
@@ -45,14 +44,12 @@ class AuthViewModel(
             userRep.observeSession().collect { user:User? ->
                 _authState.value = user
                 _isAuthenticated.value = client.auth.currentSessionOrNull()?.user?.id != null
-
-                delay(500)
                 _isSessionReady.value = true
 
                 if (user != null) {
-                    Log.d("AuthViewModel", "Authenticated user: $user")
+                    Log.d("AuthViewModel", "----- Authenticated user: $user -----")
                 } else {
-                    Log.d("AuthViewModel", "User is null")
+                    Log.d("AuthViewModel", "----- User is null -----")
                 }
             }
         }
@@ -68,12 +65,12 @@ class AuthViewModel(
 
             try {
                 userRep.registerUser(email, password)
-                Log.d("AuthViewModel", "register requested")
+                Log.d("AuthViewModel", "register requested\n\n")
             } catch (e: AuthRestException) {
-                _errorState.value = e.description
+                _errorState.value = e.message
             } catch (e: Exception) {
                 _errorState.value = e.message ?: "User creation failed"
-                Log.e("AuthViewModel", "Auth error: ${e.message}")
+                Log.e("AuthViewModel", "----- Auth error: ${e.message} -----")
             } finally {
                 _isLoading.value = false
             }
@@ -87,12 +84,12 @@ class AuthViewModel(
 
             try {
                 userRep.loginUser(email, password)
-                Log.d("AuthViewModel", "Login request sent\n\n")
+                Log.d("AuthViewModel", "----- Login request sent -----\n\n")
             } catch (e: AuthRestException) {
-                Log.e("AuthViewModel", "Auth error: ${e.description}")
-                _errorState.value = e.description
+                Log.e("AuthViewModel", "----- Auth error: ${e.description} -----")
+                _errorState.value = "Login failed, Email or Password is incorrect."
             } catch (e: Exception) {
-                Log.e("AuthViewModel", "Login failed: ${e.message}")
+                Log.e("AuthViewModel", "----- Login failed: ${e.message} -----\n\n")
                 _errorState.value = e.message
             } finally {
                 _isLoading.value = false
@@ -100,6 +97,9 @@ class AuthViewModel(
         }
     }
 
+    fun errorState(message: String) {
+        _errorState.value = message
+    }
     fun logout() {
         if (_isLoading.value) return
 
@@ -116,4 +116,10 @@ class AuthViewModel(
             }
         }
     }
+
+
+    fun clearError() {
+        _errorState.value = null
+    }
+
 }

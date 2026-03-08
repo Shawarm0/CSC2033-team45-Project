@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -132,13 +133,18 @@ fun CustomTextField(
     ) {
 
         // Label + Error message row (ORIGINAL STYLE)
-        Row {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             if (label != null) {
                 Text(
                     text = label,
                     style = MaterialTheme.typography.bodyLarge.copy(
                         fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        color = if (isError) Color.Red else Color.Black
                     ),
                     modifier = Modifier.padding(end = 5.dp)
                 )
@@ -290,6 +296,8 @@ fun CustomTextField(
  * @param value The current password value.
  * @param onValueChange Callback triggered when the password changes.
  * @param label Label displayed above the field.
+ * @param isError Whether the field is currently in an error state.
+ * @param errorMessage Optional error message displayed next to the label.
  * @param keyboardOptions Software keyboard configuration (IME action, input type, etc.).
  * @param keyboardActions Defines actions triggered from the keyboard (Next, Done, etc.).
  */
@@ -299,6 +307,8 @@ fun PasswordTextField(
     value: String,
     onValueChange: (String) -> Unit,
     label: String = "Password",
+    isError: Boolean = false,
+    errorMessage: String? = null,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default
 ) {
@@ -315,6 +325,8 @@ fun PasswordTextField(
         visualTransformation =
             if (passwordVisible) VisualTransformation.None
             else PasswordVisualTransformation(),
+        isError = isError,
+        errorMessage = errorMessage,
         trailingContent = {
             IconButton(
                 onClick = { passwordVisible = !passwordVisible },

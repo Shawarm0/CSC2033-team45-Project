@@ -243,7 +243,7 @@ fun AppNavigation(
     ) {
         composable(Screen.Login.route) { LoginScreen(rootNavController, authViewModel) }
         composable(Screen.SignUp.route) { SignUpScreen(rootNavController, authViewModel) }
-        composable(Screen.Home.route) { MainScaffold(authViewModel, rootNavController) }
+        composable(Screen.Home.route) { MainScaffold(authViewModel) }
     }
 
 }
@@ -254,8 +254,7 @@ fun AppNavigation(
 
 @Composable
 fun MainScaffold(
-    authViewModel: AuthViewModel,
-    rootNavController: NavHostController
+    authViewModel: AuthViewModel
 ) {
     val innerNavController = rememberNavController()
     val currentBackStackEntry by innerNavController.currentBackStackEntryAsState()
@@ -304,7 +303,7 @@ fun MainScaffold(
                 HomeScreen(innerNavController)
             }
             composable(Screen.Discover.route) {
-                DiscoverScreen(innerNavController, authViewModel, rootNavController)
+                DiscoverScreen(authViewModel)
             }
             composable(Screen.Alerts.route) {
                 //AlertScreen(innerNavController)

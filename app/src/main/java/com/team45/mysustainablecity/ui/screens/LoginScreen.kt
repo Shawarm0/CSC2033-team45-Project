@@ -22,8 +22,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,39 +48,27 @@ import com.team45.mysustainablecity.ui.theme.BottomBarColor
 import com.team45.mysustainablecity.ui.theme.Primary
 import com.team45.mysustainablecity.ui.theme.TextColor
 import com.team45.mysustainablecity.viewmodel.AuthViewModel
-import kotlinx.coroutines.delay
-import okhttp3.internal.wait
+import androidx.compose.runtime.collectAsState
 
 @Composable
 fun LoginScreen(
     navController: NavController,
     authViewModel: AuthViewModel
 ) {
-    val isAuthenticated = authViewModel.isAuthenticated.collectAsState()
     val focusManager = LocalFocusManager.current
     val passwordFocusRequester = remember { FocusRequester() }
-//
-//    LaunchedEffect(isAuthenticated.value) {
-//        if (isAuthenticated.value) {
-//            navController.navigate(Screen.Home.route) {
-//                popUpTo(Screen.Login.route) { inclusive = true }
-//            }
-//        }
-//    }
-
-
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    val errorState by authViewModel.errorState.collectAsState()
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = BottomBarColor
     ) { innerPadding ->
 
-
         Canvas(
             modifier = Modifier.fillMaxSize()
-        ) {
+        ) { // Box Composable
 
             val figmaWidth = 888f
             val figmaHeight = 412f
@@ -93,11 +79,9 @@ fun LoginScreen(
             val rectWidth = 808f * scaleX
             val rectHeight = 324f * scaleY
 
-            // Position (change these to move rectangle)
             val offsetX = -900f
             val offsetY = -800f
 
-            // Calculate center of rectangle
             val pivotX = offsetX + rectWidth / 2f
             val pivotY = offsetY + rectHeight / 2f
 
@@ -113,26 +97,28 @@ fun LoginScreen(
             }
         }
 
-
+        // CONTENT
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
-            ) {
+            ) { // Login Content
 
+                // HEADER
                 Text(
                     text = "Login",
                     style = MaterialTheme.typography.displayLarge
                 )
+
                 Spacer(modifier = Modifier.height(5.dp))
+
                 Text(
                     text = "Enter email and password to proceed",
                     style = MaterialTheme.typography.bodyLarge.copy(
@@ -141,26 +127,32 @@ fun LoginScreen(
                 )
 
 
-
                 Spacer(modifier = Modifier.height(20.dp))
 
 
+                // CENTER CONTENT
                 CustomTextField(
                     modifier = Modifier
                         .width(350.dp),
                     value = email,
                     placeholder = "testemail@gmail.com",
                     label = "Email",
-                    onValueChange = { email = it },
+                    onValueChange = {
+                        email = it
+                        authViewModel.clearError()  // Clear error when user types
+                    },
                     keyboardOptions = KeyboardOptions(
                         imeAction = ImeAction.Next
                     ),
+                    errorMessage = errorState,
+                    isError = errorState != null,      // ✅ Add this
                     keyboardActions = KeyboardActions(
                         onNext = {
                             passwordFocusRequester.requestFocus()
                         }
                     )
                 )
+
                 Spacer(modifier = Modifier.height(13.dp))
 
                 PasswordTextField(
@@ -172,6 +164,7 @@ fun LoginScreen(
                     keyboardOptions = KeyboardOptions(
                         imeAction = ImeAction.Done
                     ),
+                    isError = errorState != null,      // ✅ Add this
                     keyboardActions = KeyboardActions(
                         onDone = {
                             focusManager.clearFocus() // Hides keyboard
@@ -179,13 +172,13 @@ fun LoginScreen(
                     )
                 )
 
-
                 Spacer(modifier = Modifier.height(20.dp))
 
                 AppButton(
                     modifier = Modifier.width(170.dp),
                     onClick = {
                         if (email.isBlank() || password.isBlank()) {
+                            authViewModel.errorState("Email and password cannot be blank")
                             return@AppButton
                         }
 
@@ -193,7 +186,7 @@ fun LoginScreen(
                             email = email,
                             password = password,
                         )
-                        Log.d("LoginScreen", "Login request sent\n\n")
+                        Log.d("LoginScreen", "----- Login request sent -----\n\n")
                     },
                     text = "Login",
                     symbol = Icons.Default.Check,
@@ -208,6 +201,7 @@ fun LoginScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
+
                 HorizontalDivider(
                     modifier = Modifier.width(330.dp),
                     color = Color.Black,

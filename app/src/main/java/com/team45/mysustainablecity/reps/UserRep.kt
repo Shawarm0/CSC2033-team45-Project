@@ -4,6 +4,7 @@ import android.util.Log
 import com.team45.mysustainablecity.data.classes.User
 import com.team45.mysustainablecity.data.remote.SupabaseClientProvider
 import io.github.jan.supabase.auth.auth
+import io.github.jan.supabase.auth.exception.AuthRestException
 import io.github.jan.supabase.auth.exception.AuthWeakPasswordException
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.auth.status.SessionStatus
@@ -25,31 +26,20 @@ class UserRep {
     /**
      * Register user with Supabase Auth + insert profile
      */
-    @OptIn(ExperimentalUuidApi::class)
-    suspend fun registerUser(
-        email: String,
-        password: String,
-    ) {
-        try {
-            client.auth.signUpWith(Email) {
-                this.email = email
-                this.password = password
-            }
-        } catch (exception: AuthWeakPasswordException) {
-            Log.e("UserRep", "Weak password $exception")
+    suspend fun registerUser(email: String, password: String) {
+        client.auth.signUpWith(Email) {
+            this.email = email
+            this.password = password
         }
     }
+
     //suspend because needs to pause without blocking main thread
     suspend fun loginUser(email: String, password: String) {
-        try {
-            val result = client.auth.signInWith(Email) {
-                this.email = email
-                this.password = password
-            }
-            Log.d("UserRep", "Sign in result: $result")
-        } catch (e: Exception) {
-            Log.e("UserRep", "Login failed: ${e.message}")
+        val result = client.auth.signInWith(Email) {
+            this.email = email
+            this.password = password
         }
+        Log.d("UserRep", "----- Sign in result: $result -----")
     }
 
     @OptIn(ExperimentalUuidApi::class)

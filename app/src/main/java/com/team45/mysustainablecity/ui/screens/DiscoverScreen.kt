@@ -11,12 +11,8 @@ import java.lang.Thread.sleep
 
 @Composable
 fun DiscoverScreen(
-    navController: NavController,
     authViewModel: AuthViewModel,
-    rootNavController: NavController
 ) {
-    Text("Discover Screen")
-
     Button(
         onClick = {
             authViewModel.logout()
