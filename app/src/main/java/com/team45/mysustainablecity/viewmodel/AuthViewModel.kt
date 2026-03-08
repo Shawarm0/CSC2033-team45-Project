@@ -22,7 +22,7 @@ class AuthViewModel(
     val authState: StateFlow<User?> = _authState
 
     private val _isAuthenticated = MutableStateFlow(false)
-    val isAuthenticated: StateFlow<Boolean> = _isAuthenticated
+    var isAuthenticated: StateFlow<Boolean> = _isAuthenticated
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
@@ -80,7 +80,7 @@ class AuthViewModel(
 
             try {
                 userRep.loginUser(email, password)
-                Log.d("AuthViewModel", "Login request sent")
+                Log.d("AuthViewModel", "Login request sent\n\n")
             } catch (e: AuthRestException) {
                 Log.e("AuthViewModel", "Auth error: ${e.description}")
                 _errorState.value = e.description

@@ -1,5 +1,6 @@
 package com.team45.mysustainablecity.ui.screens
 
+import android.util.Log
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -49,27 +50,20 @@ import com.team45.mysustainablecity.ui.theme.BottomBarColor
 import com.team45.mysustainablecity.ui.theme.Primary
 import com.team45.mysustainablecity.ui.theme.TextColor
 import com.team45.mysustainablecity.viewmodel.AuthViewModel
+import kotlinx.coroutines.delay
+import okhttp3.internal.wait
 
 @Composable
 fun LoginScreen(
     navController: NavController,
     authViewModel: AuthViewModel
 ) {
-    val isAuthenticated = authViewModel.isAuthenticated.collectAsState()
     val focusManager = LocalFocusManager.current
     val passwordFocusRequester = remember { FocusRequester() }
-
-    LaunchedEffect(isAuthenticated.value) {
-        if (isAuthenticated.value) {
-            navController.navigate(Screen.Home.route) {
-                popUpTo(Screen.Login.route) { inclusive = true }
-            }
-        }
-    }
-
-
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+
+
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -182,15 +176,19 @@ fun LoginScreen(
                 AppButton(
                     modifier = Modifier.width(170.dp),
                     onClick = {
-                        navController.navigate(Screen.Home.route) {
-                            popUpTo(Screen.Login.route) { inclusive = true }
+                        if (email.isBlank() || password.isBlank()) {
+                            return@AppButton
                         }
-                        authViewModel.login(email, password)
+
+                        authViewModel.login(
+                            email = email,
+                            password = password,
+                        )
+                        Log.d("LoginScreen", "Login request sent\n\n")
                     },
                     text = "Login",
                     symbol = Icons.Default.Check,
                 )
-
             }
 
             // BOTTOM CONTENT

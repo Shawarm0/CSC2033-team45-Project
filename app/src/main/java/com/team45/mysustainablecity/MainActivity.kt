@@ -8,8 +8,12 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Explore
@@ -18,11 +22,16 @@ import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.outlined.Explore
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Place
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -143,15 +152,35 @@ fun AppNavigation(
     rootNavController: NavHostController,
     authViewModel: AuthViewModel
 ) {
+    val isAuthenticated = authViewModel.isAuthenticated.collectAsState()
+
+    val startDestination = if (isAuthenticated.value) {
+        Screen.Home.route
+    } else {
+        Screen.Login.route
+    }
+
     NavHost(
         navController = rootNavController,
-        startDestination = Screen.Login.route,
+        startDestination = startDestination,
         enterTransition = {
             val from = initialState.destination.route
             val to = targetState.destination.route
 
-            when (// Forward: Login → SignUp or Main
-                from) {
+            when (from) {
+
+                // Logout: Main → Login
+                Screen.Discover.route,
+                Screen.Home.route,
+                Screen.Alerts.route -> {
+                    if (to == Screen.Login.route) {
+                        fadeIn(
+                            animationSpec = tween(1000)
+                        )
+                    } else EnterTransition.None
+                }
+
+                // Forward: Login → SignUp or Main
                 Screen.Login.route if to in listOf(
                     Screen.SignUp.route,
                     Screen.Home.route,
@@ -164,9 +193,8 @@ fun AppNavigation(
                     )
                 }
 
-                // Back: SignUp → Login
                 Screen.SignUp.route if to == Screen.Login.route -> {
-                    EnterTransition.None   // 🔥 important
+                    EnterTransition.None
                 }
 
                 else -> EnterTransition.None
@@ -205,8 +233,9 @@ fun AppNavigation(
     ) {
         composable(Screen.Login.route) { LoginScreen(rootNavController, authViewModel) }
         composable(Screen.SignUp.route) { SignUpScreen(rootNavController, authViewModel) }
-        composable(Screen.Home.route) { MainScaffold(authViewModel) }
+        composable(Screen.Home.route) { MainScaffold(authViewModel, rootNavController) }
     }
+
 }
 
 
@@ -215,7 +244,8 @@ fun AppNavigation(
 
 @Composable
 fun MainScaffold(
-    authViewModel: AuthViewModel
+    authViewModel: AuthViewModel,
+    rootNavController: NavHostController
 ) {
     val innerNavController = rememberNavController()
     val currentBackStackEntry by innerNavController.currentBackStackEntryAsState()
@@ -264,7 +294,7 @@ fun MainScaffold(
                 HomeScreen(innerNavController)
             }
             composable(Screen.Discover.route) {
-                DiscoverScreen(innerNavController, authViewModel)
+                DiscoverScreen(innerNavController, authViewModel, rootNavController)
             }
             composable(Screen.Alerts.route) {
                 //AlertScreen(innerNavController)

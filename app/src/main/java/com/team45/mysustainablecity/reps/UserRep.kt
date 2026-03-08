@@ -4,6 +4,7 @@ import android.util.Log
 import com.team45.mysustainablecity.data.classes.User
 import com.team45.mysustainablecity.data.remote.SupabaseClientProvider
 import io.github.jan.supabase.auth.auth
+import io.github.jan.supabase.auth.exception.AuthWeakPasswordException
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.auth.status.SessionStatus
 import io.github.jan.supabase.postgrest.from
@@ -29,9 +30,13 @@ class UserRep {
         email: String,
         password: String,
     ) {
-        client.auth.signUpWith(Email) {
-            this.email = email
-            this.password = password
+        try {
+            client.auth.signUpWith(Email) {
+                this.email = email
+                this.password = password
+            }
+        } catch (exception: AuthWeakPasswordException) {
+            Log.e("UserRep", "Weak password $exception")
         }
     }
     //suspend because needs to pause without blocking main thread
