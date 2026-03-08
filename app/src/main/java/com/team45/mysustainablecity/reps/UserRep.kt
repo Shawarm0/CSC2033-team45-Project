@@ -169,6 +169,7 @@ class UserRep {
             client.from("alerts").update(mapOf("is_read" to true)) {    // Set is_read field to true, no need to check if its false before
                 filter { eq("alert_id", alertId) }
             }
+            Log.d("UserRep", "Successfully marked alert: $alertId as read")
             return true
         } catch (e: Exception) {
             Log.e("UserRep", "Failed to mark alert as read: ${e.message}")
