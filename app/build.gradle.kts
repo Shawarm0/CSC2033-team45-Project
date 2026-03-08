@@ -84,6 +84,7 @@ dependencies {
     // This is to get the icons imported
 
     implementation("androidx.compose.material:material-icons-extended:1.7.8")
+    implementation("androidx.core:core-splashscreen:1.0.1")
 
     // This is for the navigation graph.
     val nav_version = "2.9.7"
