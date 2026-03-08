@@ -28,9 +28,6 @@ class AuthViewModel(
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
 
-    private val _alerts = MutableStateFlow<List<Alert>>(emptyList())
-    val alerts: StateFlow<List<Alert>> = _alerts
-
     private val _operationSuccess = MutableStateFlow<Boolean?>(null)
     val operationSuccess: StateFlow<Boolean?> = _operationSuccess
 
@@ -164,23 +161,6 @@ class AuthViewModel(
 
             } catch (e: Exception) {
                 Log.e("AuthViewModel", "Failed to load user: ${e.message}")
-            }
-        }
-    }
-
-    /**
-     * Load alerts for the user
-     */
-    fun loadAlerts(userId: String?) {
-        viewModelScope.launch {
-            try {
-                userRep.getAlerts(userId).collect { alertsList ->
-                    Log.d("AuthViewModel", "successfully loaded alerts $alertsList")
-                    _alerts.value = alertsList
-                }
-
-            } catch (e: Exception) {
-                Log.e("AuthViewModel", "Failed to load alerts: ${e.message}")
             }
         }
     }
