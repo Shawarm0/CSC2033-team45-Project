@@ -24,6 +24,9 @@ class AuthViewModel(
     private val _isAuthenticated = MutableStateFlow(false)
     var isAuthenticated: StateFlow<Boolean> = _isAuthenticated
 
+    private val _isSessionReady = MutableStateFlow(false)
+    val isSessionReady: StateFlow<Boolean> = _isSessionReady
+
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
 
@@ -41,6 +44,8 @@ class AuthViewModel(
             userRep.observeSession().collect { user:User? ->
                 _authState.value = user
                 _isAuthenticated.value = client.auth.currentSessionOrNull()?.user?.id != null
+
+                _isSessionReady.value = true
 
                 if (user != null) {
                     Log.d("AuthViewModel", "Authenticated user: $user")

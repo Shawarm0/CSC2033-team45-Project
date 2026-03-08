@@ -32,6 +32,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.LineHeightStyle
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -58,6 +59,12 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Log.d("MainActivity", "onCreate() called")
+
+        val splashScreen = installSplashScreen()
+
+        splashScreen.setKeepOnScreenCondition {
+            !authViewModel.isSessionReady.value
+        }
 
         enableEdgeToEdge()
         setContent {
@@ -152,9 +159,12 @@ fun AppNavigation(
     rootNavController: NavHostController,
     authViewModel: AuthViewModel
 ) {
-    val isAuthenticated = authViewModel.isAuthenticated.collectAsState()
+    val isAuthenticated by authViewModel.isAuthenticated.collectAsState()
+    val isSessionReady by authViewModel.isSessionReady.collectAsState()
 
-    val startDestination = if (isAuthenticated.value) {
+    if (!isSessionReady) return
+
+    val startDestination = if (isAuthenticated) {
         Screen.Home.route
     } else {
         Screen.Login.route
