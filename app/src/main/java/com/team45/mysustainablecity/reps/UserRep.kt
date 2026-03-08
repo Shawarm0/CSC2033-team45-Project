@@ -217,4 +217,27 @@ class UserRep {
             return false
         }
     }
+
+    suspend fun clearAlerts(): Boolean {
+        try {
+            val userID = getSelf()?.userID
+
+            if (userID == null) {
+                Log.e("UserRep", "Failed to clear alerts: User ID is null")
+                return false
+            }
+
+            client.from("alerts").delete {
+                filter {
+                    eq("user_id", userID)
+                    eq("is_read", true)
+                }
+            }
+            Log.d("UserRep", "Successfully clear alerts for user ${getSelf()?.userID}")
+            return true
+        } catch (e: Exception) {
+            Log.e("UserRep", "Failed to clear alerts: ${e.message}")
+            return false
+        }
+    }
 }
