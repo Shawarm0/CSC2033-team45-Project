@@ -16,21 +16,33 @@ class ModRep {
     private val client = SupabaseClientProvider.client
     private val _unapprovedPosts = MutableStateFlow<List<Post>>(emptyList())
     val unapprovedPosts: StateFlow<List<Post>> = _unapprovedPosts
+    private val _moderationHistory = MutableStateFlow<List<Moderation>>(emptyList())
+    val moderationHistory: StateFlow<List<Moderation>> = _moderationHistory
 
-    suspend fun makeModerator(userId: Uuid) {
-        TODO()
+
+    suspend fun loadModerationHistoryFromModUser(modId: Int) {
+        val history = client
+            .from("moderation")
+            .select {
+                filter {
+                    eq("moderator_id", modId)
+                }
+            }
+            .decodeList<Moderation>()
+
+        _moderationHistory.value = history
     }
 
-    suspend fun deactivateModUser(userId: Uuid, moderator: Uuid) {
-        TODO()
-    }
 
-    fun getModerationHistoryFromModUser(modId: Int): StateFlow<List<Moderation>> {
-        TODO("Waiting on Moderation data class to be created")
-    }
+    suspend fun getModerationHistoryFromPost(postId: Int) {
+        val result = client
+            .from("moderation")
+            .select {
+                filter { eq("post_id", postId) }
+            }
+            .decodeList<Moderation>()
 
-    fun getModerationHistoryFromPost(postId: Int): StateFlow<List<Moderation>> {
-        TODO("Waiting on Moderation data class to be created")
+        _moderationHistory.value = result
     }
 
     suspend fun rejectPost(moderation: Moderation) {
