@@ -8,15 +8,13 @@ import androidx.navigation.NavHostController
 import com.team45.mysustainablecity.viewmodel.AuthViewModel
 
 @Composable
-fun DiscoverScreen(
+fun PostScreen(
     authViewModel: AuthViewModel,
+    innerNavController: NavHostController,
+    locationName: String?,
 ) {
-    Button(
-        onClick = {
-            authViewModel.logout()
-            Log.d("DiscoverScreen", "Logout request sent\n\n")
-        }
-    ) {
-        Text("LogOut")
+    if (locationName != null) {
+        Text(locationName)
     }
+
 }

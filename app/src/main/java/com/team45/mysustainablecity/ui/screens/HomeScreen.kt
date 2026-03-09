@@ -26,7 +26,9 @@ fun HomeScreen(
     ) {
 
         // Map background
-        DiscoverMap()
+        DiscoverMap(
+            navController = navController
+        )
 
         // Search bar overlay
         CustomTextField(

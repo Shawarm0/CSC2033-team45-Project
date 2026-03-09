@@ -11,9 +11,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Explore
@@ -22,35 +19,29 @@ import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.outlined.Explore
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Place
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.team45.mysustainablecity.data.remote.SupabaseClientProvider
+import androidx.navigation.navArgument
 import com.team45.mysustainablecity.ui.components.BottomBar
 import com.team45.mysustainablecity.ui.screens.DiscoverScreen
 import com.team45.mysustainablecity.ui.screens.HomeScreen
 import com.team45.mysustainablecity.ui.screens.LoginScreen
+import com.team45.mysustainablecity.ui.screens.PostScreen
 import com.team45.mysustainablecity.ui.screens.SignUpScreen
 import com.team45.mysustainablecity.ui.theme.Background
 import com.team45.mysustainablecity.ui.theme.MySustainableCityTheme
 import com.team45.mysustainablecity.utils.AppContainer
 import com.team45.mysustainablecity.viewmodel.AuthViewModel
-import io.github.jan.supabase.auth.auth
 
 /**
  * The main entry point of the app
@@ -151,6 +142,9 @@ sealed class Screen(
     object Discover : Screen("discover", Icons.Filled.Explore, Icons.Outlined.Explore)
     object Alerts : Screen ("alerts", Icons.Filled.Notifications, Icons.Outlined.Notifications)
     object Post : Screen("post")
+    object DiscoverPost : Screen("discover?locationName={locationName}") {
+        fun createRoute(locationName: String) = "discover?locationName=$locationName"
+    }
     object Login : Screen("login")
     object SignUp : Screen("signup")
     object Profile : Screen("profile")
@@ -304,6 +298,13 @@ fun MainScaffold(
             }
             composable(Screen.Discover.route) {
                 DiscoverScreen(authViewModel)
+            }
+            composable(
+                route = Screen.DiscoverPost.route,
+                arguments = listOf(navArgument("locationName") { nullable = true })
+            ) { backStackEntry ->
+                val locationName = backStackEntry.arguments?.getString("locationName")
+                PostScreen(authViewModel, innerNavController, locationName)
             }
             composable(Screen.Alerts.route) {
                 //AlertScreen(innerNavController)
