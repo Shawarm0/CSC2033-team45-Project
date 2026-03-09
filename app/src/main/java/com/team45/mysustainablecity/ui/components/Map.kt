@@ -42,6 +42,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.google.accompanist.permissions.*
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -54,12 +55,23 @@ import com.team45.mysustainablecity.utils.CustomMapMarker
 import com.team45.mysustainablecity.utils.LocationBottomSheet
 import com.team45.mysustainablecity.utils.MapLocation
 import kotlinx.coroutines.launch
+import androidx.compose.material.icons.filled.Attractions
+import androidx.compose.material.icons.filled.Church
+import androidx.compose.material.icons.filled.LocalMall
+import androidx.compose.material.icons.filled.Park
+import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.filled.ShoppingBag
+import androidx.compose.material.icons.filled.SportsSoccer
+import androidx.compose.material.icons.filled.Train
+import androidx.compose.material.icons.filled.Water
 
 
 @OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class)
 @SuppressLint("MissingPermission")
 @Composable
-fun DiscoverMap() {
+fun DiscoverMap(
+    navController: NavController
+) {
 
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -123,24 +135,26 @@ fun DiscoverMap() {
                 }
                 val isSelected = selectedLocation == location
 
-                MarkerComposable(
-                    keys = arrayOf(location.name, zoom > 15f, isSelected),
-                    state = MarkerState(position = location.position),
-                    onClick = {
-                        selectedLocation = location
-                        coroutineScope.launch {
-                            cameraPositionState.animate(
-                                CameraUpdateFactory.newLatLngZoom(location.position, 16f)
-                            )
-                        }
-                        true
-                    },
-                ) {
-                    CustomMapMarker(
-                        location = location,
-                        cameraPositionState = cameraPositionState,
-                        isSelected = isSelected
-                    )
+                if (zoom > 14f) {
+                    MarkerComposable(
+                        keys = arrayOf(location.name, zoom > 15f, isSelected),
+                        state = MarkerState(position = location.position),
+                        onClick = {
+                            selectedLocation = location
+                            coroutineScope.launch {
+                                cameraPositionState.animate(
+                                    CameraUpdateFactory.newLatLngZoom(location.position, 16f)
+                                )
+                            }
+                            true
+                        },
+                    ) {
+                        CustomMapMarker(
+                            location = location,
+                            cameraPositionState = cameraPositionState,
+                            isSelected = isSelected
+                        )
+                    }
                 }
             }
         }
@@ -179,7 +193,7 @@ fun DiscoverMap() {
             containerColor = Color.White,
             dragHandle = { BottomSheetDefaults.DragHandle() }
         ) {
-            LocationBottomSheet(location = selectedLocation!!)
+            LocationBottomSheet(location = selectedLocation!!, navController)
         }
     }
 }
@@ -214,6 +228,78 @@ val locations = listOf(
         color = Color(0xFF9C27B0),
         icon = Icons.Default.Castle,
         description = "The Black Gate is the northern entrance to Newcastle's ancient Roman fort, Pons Aelius.",
+        imageRes = null
+    ),
+    MapLocation(
+        name = "Grey's Monument",
+        position = LatLng(54.9751, -1.6131),
+        color = Color(0xFF1976D2),
+        icon = Icons.Default.Place,
+        description = "A tall column in the heart of the city centre commemorating Earl Grey, the former Prime Minister.",
+        imageRes = null
+    ),
+    MapLocation(
+        name = "Newcastle Cathedral",
+        position = LatLng(54.9726, -1.6154),
+        color = Color(0xFF388E3C),
+        icon = Icons.Default.Church,
+        description = "The Cathedral Church of St Nicholas, a stunning medieval building in the heart of Newcastle.",
+        imageRes = null
+    ),
+    MapLocation(
+        name = "Quayside",
+        position = LatLng(54.9686, -1.6094),
+        color = Color(0xFFE64A19),
+        icon = Icons.Default.Water,
+        description = "Newcastle's vibrant riverside area, home to restaurants, bars, and stunning views of the Tyne Bridge.",
+        imageRes = null
+    ),
+    MapLocation(
+        name = "Tyne Bridge",
+        position = LatLng(54.9679, -1.6051),
+        color = Color(0xFF00897B),
+        icon = Icons.Default.Attractions,
+        description = "The iconic green arch bridge spanning the River Tyne, one of Newcastle's most recognisable landmarks.",
+        imageRes = null
+    ),
+    MapLocation(
+        name = "Newcastle Central Station",
+        position = LatLng(54.9686, -1.6174),
+        color = Color(0xFFF57C00),
+        icon = Icons.Default.Train,
+        description = "One of the finest Victorian railway stations in the country, designed by John Dobson in 1850.",
+        imageRes = null
+    ),
+    MapLocation(
+        name = "Grainger Market",
+        position = LatLng(54.9742, -1.6155),
+        color = Color(0xFFAD1457),
+        icon = Icons.Default.ShoppingBag,
+        description = "A covered Victorian market in the city centre, one of the oldest and largest in Europe.",
+        imageRes = null
+    ),
+    MapLocation(
+        name = "Eldon Square",
+        position = LatLng(54.9755, -1.6158),
+        color = Color(0xFF5E35B1),
+        icon = Icons.Default.LocalMall,
+        description = "One of the largest city centre shopping complexes in the UK with hundreds of shops.",
+        imageRes = null
+    ),
+    MapLocation(
+        name = "St James' Park",
+        position = LatLng(54.9756, -1.6218),
+        color = Color(0xFF212121),
+        icon = Icons.Default.SportsSoccer,
+        description = "Home of Newcastle United FC, one of the largest football stadiums in England.",
+        imageRes = null
+    ),
+    MapLocation(
+        name = "Leazes Park",
+        position = LatLng(54.9789, -1.6218),
+        color = Color(0xFF43A047),
+        icon = Icons.Default.Park,
+        description = "A beautiful Victorian park close to the city centre, perfect for a relaxing walk.",
         imageRes = null
     )
 )
