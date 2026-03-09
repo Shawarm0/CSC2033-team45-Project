@@ -17,6 +17,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -29,14 +30,15 @@ fun FilterPill(
     isSelected: Boolean,
     onClick: () -> Unit,
     icon: @Composable () -> Unit,
-    selectedColor: Color = Primary
+    selectedColor: Color = Primary,
+    shadow: Boolean = false
 ) {
     Surface(
         modifier = Modifier
             .wrapContentHeight()
             .wrapContentWidth(),
         shape = RoundedCornerShape(50),
-        shadowElevation = if (isSelected) 2.dp else 6.dp,
+        shadowElevation = if (shadow) if (isSelected) 2.dp else 6.dp else 0.dp,
         color = if (isSelected) selectedColor else BottomBarColor
     ) {
         Row(
