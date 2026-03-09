@@ -43,7 +43,8 @@ import com.team45.mysustainablecity.Screen
 @Composable
 fun LocationBottomSheet(
     location: MapLocation,
-    navController: NavController
+    navController: NavController,
+    onDismiss: () -> Unit
 ) {
     Box(
         modifier = Modifier
@@ -90,6 +91,7 @@ fun LocationBottomSheet(
                     shadowElevation = 4.dp
                 ) {
                     IconButton(onClick = {
+                        onDismiss()
                         navController.navigate(Screen.DiscoverPost.createRoute(location.name))
                     }) {
                         Icon(

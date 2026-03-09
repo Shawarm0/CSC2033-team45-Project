@@ -193,7 +193,11 @@ fun DiscoverMap(
             containerColor = Color.White,
             dragHandle = { BottomSheetDefaults.DragHandle() }
         ) {
-            LocationBottomSheet(location = selectedLocation!!, navController)
+            LocationBottomSheet(
+                location = selectedLocation!!,
+                navController,
+                onDismiss = { selectedLocation = null }
+            )
         }
     }
 }

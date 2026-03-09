@@ -9,8 +9,11 @@ import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Explore
@@ -287,11 +290,28 @@ fun MainScaffold(
             startDestination = Screen.Home.route,
             modifier = Modifier.padding(padding),
             enterTransition = {
-                EnterTransition.None
+                val to = targetState.destination.route
+                if (to == Screen.DiscoverPost.route) {
+                    slideInVertically(
+                        initialOffsetY = { it },
+                        animationSpec = tween(500)
+                    )
+                } else {
+                    EnterTransition.None
+                }
             },
             exitTransition = {
-                ExitTransition.None
+                val from = initialState.destination.route
+                if (from == Screen.DiscoverPost.route) {
+                    slideOutVertically(
+                        targetOffsetY = { it },
+                        animationSpec = tween(500)
+                    )
+                } else {
+                    ExitTransition.None
+                }
             }
+
         ) {
             composable(Screen.Home.route) {
                 HomeScreen(innerNavController)
