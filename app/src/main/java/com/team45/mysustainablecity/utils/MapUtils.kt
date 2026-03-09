@@ -1,5 +1,7 @@
 package com.team45.mysustainablecity.utils
 
+import android.graphics.drawable.Icon
+import android.media.Image
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -16,6 +18,7 @@ import androidx.compose.material.icons.filled.DirectionsBike
 import androidx.compose.material.icons.filled.EvStation
 import androidx.compose.material.icons.filled.HourglassEmpty
 import androidx.compose.material.icons.filled.Park
+import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
@@ -84,12 +87,12 @@ data class MapLocation(
     val name: String,
     val position: LatLng,
     val tags: List<Tag> = emptyList(),
-    val icon: ImageVector,
     val description: String,
     val imageRes: Int? = null
 ) {
     val primaryTag: Tag? get() = tags.firstOrNull()
-    val color: Color get() = primaryTag?.color ?: Color(0xFF546E7A)
+    val color: Color get() = primaryTag?.color ?: Color(0xFF2196F3)
+    val icon: ImageVector get() = primaryTag?.icon ?: Icons.Default.Place
 
     // Returns the color based on which filter is active
     fun colorForFilter(activeFilters: Set<Tag>): Color {

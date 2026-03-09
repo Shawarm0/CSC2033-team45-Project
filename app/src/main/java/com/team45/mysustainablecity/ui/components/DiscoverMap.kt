@@ -369,7 +369,6 @@ val locations = listOf(
         name = "Quayside Bike Rack A",
         position = LatLng(54.9686, -1.6094),
         tags = listOf(Tag.BIKE_RACK, Tag.APPROVED),
-        icon = Icons.AutoMirrored.Filled.DirectionsBike,
         description = "Bike rack near the Quayside restaurants, 12 spaces available.",
         imageRes = null
     ),
@@ -377,7 +376,6 @@ val locations = listOf(
         name = "Quayside Bike Rack B",
         position = LatLng(54.9688, -1.6088),
         tags = listOf(Tag.BIKE_RACK, Tag.AWAITING_APPROVAL),
-        icon = Icons.AutoMirrored.Filled.DirectionsBike,
         description = "Bike rack outside the Pitcher & Piano, 8 spaces. Pending council sign-off.",
         imageRes = null
     ),
@@ -385,7 +383,6 @@ val locations = listOf(
         name = "Quayside Bike Rack C",
         position = LatLng(54.9684, -1.6099),
         tags = listOf(Tag.BIKE_RACK, Tag.TEMPORARY),
-        icon = Icons.AutoMirrored.Filled.DirectionsBike,
         description = "Temporary covered bike rack near the law courts, 20 spaces. Installed for summer.",
         imageRes = null
     ),
@@ -395,7 +392,6 @@ val locations = listOf(
         name = "Quayside EV Charger 1",
         position = LatLng(54.9685, -1.6091),
         tags = listOf(Tag.ELECTRIC_CHARGER, Tag.APPROVED),
-        icon = Icons.Default.EvStation,
         description = "Fast EV charging point, 2 bays, 50kW.",
         imageRes = null
     ),
@@ -403,7 +399,6 @@ val locations = listOf(
         name = "Quayside EV Charger 2",
         position = LatLng(54.9683, -1.6096),
         tags = listOf(Tag.ELECTRIC_CHARGER, Tag.AWAITING_APPROVAL),
-        icon = Icons.Default.EvStation,
         description = "Proposed standard EV charging point, 4 bays, 22kW. Awaiting planning permission.",
         imageRes = null
     ),
@@ -413,7 +408,6 @@ val locations = listOf(
         name = "Pothole on Grey Street",
         position = LatLng(54.9748, -1.6140),
         tags = listOf(Tag.ISSUE),
-        icon = Icons.Default.Warning,
         description = "Large pothole causing hazard for cyclists near the Theatre Royal.",
         imageRes = null
     ),
@@ -421,7 +415,6 @@ val locations = listOf(
         name = "Broken Street Light",
         position = LatLng(54.9751, -1.6135),
         tags = listOf(Tag.ISSUE, Tag.TEMPORARY),
-        icon = Icons.Default.Warning,
         description = "Street light out on Grey Street junction. Temporary fix in place, permanent repair pending.",
         imageRes = null
     ),
@@ -429,7 +422,6 @@ val locations = listOf(
         name = "Fly Tipping",
         position = LatLng(54.9745, -1.6148),
         tags = listOf(Tag.ISSUE),
-        icon = Icons.Default.Warning,
         description = "Illegally dumped rubbish behind Grainger Market.",
         imageRes = null
     ),
@@ -439,7 +431,6 @@ val locations = listOf(
         name = "Broken Fence",
         position = LatLng(54.9791, -1.6220),
         tags = listOf(Tag.ISSUE, Tag.AWAITING_APPROVAL),
-        icon = Icons.Default.Warning,
         description = "Fence along Leazes Park perimeter is broken. Repair request submitted.",
         imageRes = null
     ),
@@ -447,7 +438,6 @@ val locations = listOf(
         name = "Leazes Park",
         position = LatLng(54.9789, -1.6218),
         tags = listOf(Tag.GREEN_SPACE, Tag.APPROVED),
-        icon = Icons.Default.Park,
         description = "A beautiful Victorian park close to the city centre, perfect for a relaxing walk.",
         imageRes = null
     ),
@@ -455,7 +445,6 @@ val locations = listOf(
         name = "Leazes Park Pond",
         position = LatLng(54.9793, -1.6211),
         tags = listOf(Tag.GREEN_SPACE, Tag.AWAITING_APPROVAL),
-        icon = Icons.Default.Park,
         description = "Proposed wildlife conservation area around the pond. Awaiting council approval.",
         imageRes = null
     ),
@@ -465,7 +454,6 @@ val locations = listOf(
         name = "New Cycle Lane",
         position = LatLng(54.9756, -1.6218),
         tags = listOf(Tag.BIKE_RACK, Tag.APPROVED),
-        icon = Icons.AutoMirrored.Filled.DirectionsBike,
         description = "Approved protected cycle lane running alongside St James' Park.",
         imageRes = null
     ),
@@ -473,7 +461,6 @@ val locations = listOf(
         name = "St James' EV Bays",
         position = LatLng(54.9758, -1.6214),
         tags = listOf(Tag.ELECTRIC_CHARGER, Tag.AWAITING_APPROVAL),
-        icon = Icons.Default.EvStation,
         description = "Proposed EV charging bays in the St James' car park. Community consultation ongoing.",
         imageRes = null
     ),
@@ -483,7 +470,6 @@ val locations = listOf(
         name = "Central Station EV Hub",
         position = LatLng(54.9684, -1.6178),
         tags = listOf(Tag.ELECTRIC_CHARGER, Tag.APPROVED),
-        icon = Icons.Default.EvStation,
         description = "Approved EV charging hub outside Central Station, 10 bays.",
         imageRes = null
     ),
@@ -491,7 +477,6 @@ val locations = listOf(
         name = "Central Station Bike Shelter",
         position = LatLng(54.9687, -1.6171),
         tags = listOf(Tag.BIKE_RACK, Tag.AWAITING_APPROVAL),
-        icon = Icons.AutoMirrored.Filled.DirectionsBike,
         description = "Proposed covered bike shelter for 50 bikes outside the station.",
         imageRes = null
     ),
@@ -499,7 +484,6 @@ val locations = listOf(
         name = "Station Road Roadworks",
         position = LatLng(54.9682, -1.6183),
         tags = listOf(Tag.ISSUE, Tag.TEMPORARY),
-        icon = Icons.Default.Construction,
         description = "Temporary road closure outside Central Station for utility works. Expected until end of month.",
         imageRes = null
     ),
@@ -509,7 +493,6 @@ val locations = listOf(
         name = "Tyne Bridge",
         position = LatLng(54.9679, -1.6051),
         tags = emptyList(),
-        icon = Icons.Default.Attractions,
         description = "The iconic green arch bridge spanning the River Tyne.",
         imageRes = null
     ),
@@ -517,7 +500,6 @@ val locations = listOf(
         name = "Grey's Monument",
         position = LatLng(54.9751, -1.6131),
         tags = emptyList(),
-        icon = Icons.Default.Place,
         description = "A tall column commemorating Earl Grey, the former Prime Minister.",
         imageRes = null
     ),
