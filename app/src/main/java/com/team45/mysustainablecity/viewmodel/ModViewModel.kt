@@ -10,6 +10,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
+
+
 class ModViewModel(
     private val modRep: ModRep
 ) : ViewModel() {
@@ -17,11 +19,74 @@ class ModViewModel(
     private val _unapprovedPosts = MutableStateFlow<List<Post>>(emptyList())
     val unapprovedPosts: StateFlow<List<Post>> = _unapprovedPosts
 
+    private val _moderationHistory = MutableStateFlow<List<Moderation>>(emptyList())
+    val moderationHistory: StateFlow<List<Moderation>> = _moderationHistory
+
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
 
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error
+
+
+    init {
+        observeUnapprovedPosts()
+        observeModerationHistory()
+    }
+
+
+    /**
+     * Observe unapproved posts
+     */
+    private fun observeUnapprovedPosts() {
+        viewModelScope.launch {
+
+            try {
+
+                modRep.unapprovedPosts.collect { posts ->
+
+                    _unapprovedPosts.value = posts
+
+                    Log.d(
+                        "ModViewModel",
+                        "Unapproved posts updated: ${posts.size}"
+                    )
+                }
+
+            } catch (e: Exception) {
+
+                Log.e("ModViewModel", "Error observing posts: ${e.message}")
+                _error.value = e.message
+            }
+        }
+    }
+
+
+    /**
+     * Observe moderation history
+     */
+    private fun observeModerationHistory() {
+        viewModelScope.launch {
+
+            try {
+
+                modRep.moderationHistory.collect { history ->
+
+                    _moderationHistory.value = history
+
+                    Log.d(
+                        "ModViewModel",
+                        "Moderation history updated: ${history.size}"
+                    )
+                }
+
+            } catch (e: Exception) {
+
+                Log.e("ModViewModel", "Error observing history: ${e.message}")
+                _error.value = e.message
+            }
+        }
+    }
 
 
     /**
@@ -34,13 +99,8 @@ class ModViewModel(
 
             try {
 
-                val postsFlow = modRep.getUnapprovedPosts()
-
-                postsFlow.collect { posts ->
-                    _unapprovedPosts.value = posts
-                    Log.d("ModViewModel", "Unapproved Posts Refreshed ${posts.toString()}")
-
-                }
+                val posts = modRep.getUnapprovedPosts()
+                Log.e("ModViewModel", "loadedUnapprovedPosts")
 
             } catch (e: Exception) {
 
@@ -48,6 +108,7 @@ class ModViewModel(
                 _error.value = e.message
 
             } finally {
+
                 _isLoading.value = false
             }
         }
@@ -55,7 +116,7 @@ class ModViewModel(
 
 
     /**
-     * Approve a post
+     * Approve post
      */
     fun approvePost(moderation: Moderation) {
         viewModelScope.launch {
@@ -64,10 +125,9 @@ class ModViewModel(
 
                 modRep.approvePost(moderation)
 
-                // refresh list after approval
-                loadUnapprovedPosts()
-                Log.d("ModViewModel", "Post Approved")
+                modRep.getUnapprovedPosts()
 
+                Log.d("ModViewModel", "Post approved")
 
             } catch (e: Exception) {
 
@@ -79,7 +139,7 @@ class ModViewModel(
 
 
     /**
-     * Reject a post
+     * Reject post
      */
     fun rejectPost(moderation: Moderation) {
         viewModelScope.launch {
@@ -88,14 +148,69 @@ class ModViewModel(
 
                 modRep.rejectPost(moderation)
 
-                // refresh list after rejection
-                loadUnapprovedPosts()
-                Log.d("ModViewModel", "Post Rejected")
+                // refresh list
+                modRep.getUnapprovedPosts()
+
+                Log.d("ModViewModel", "Post rejected")
 
             } catch (e: Exception) {
 
                 Log.e("ModViewModel", "Reject failed: ${e.message}")
                 _error.value = e.message
+            }
+        }
+    }
+
+
+    /**
+     * Load moderation history for moderator
+     */
+    fun loadModerationHistoryFromModUser(modId: Int) {
+        viewModelScope.launch {
+
+            _isLoading.value = true
+
+            try {
+
+                val mods = modRep.loadModerationHistoryFromModUser(modId)
+                Log.e("ModViewModel", "loadedModHistoryByUserId:")
+
+
+            } catch (e: Exception) {
+
+                Log.e("ModViewModel", "Failed loading mod history: ${e.message}")
+                _error.value = e.message
+
+            } finally {
+
+                _isLoading.value = false
+            }
+        }
+    }
+
+
+    /**
+     * Load moderation history for post
+     */
+    fun loadModerationHistoryFromPost(postId: Int) {
+        viewModelScope.launch {
+
+            _isLoading.value = true
+
+            try {
+
+                val mods = modRep.getModerationHistoryFromPost(postId)
+                Log.e("ModViewModel", "loadedModHistoryByPostId:")
+
+
+            } catch (e: Exception) {
+
+                Log.e("ModViewModel", "Failed loading post history: ${e.message}")
+                _error.value = e.message
+
+            } finally {
+
+                _isLoading.value = false
             }
         }
     }
