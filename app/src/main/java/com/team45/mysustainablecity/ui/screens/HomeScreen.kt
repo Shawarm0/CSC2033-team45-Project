@@ -18,56 +18,7 @@ import com.team45.mysustainablecity.ui.components.DiscoverMap
 fun HomeScreen(
     navController: NavController
 ) {
-
-    var text by remember { mutableStateOf("") }
-
-    Box(
-        modifier = Modifier.fillMaxSize()
-    ) {
-
-        // Map background
-        DiscoverMap(
-            navController = navController
-        )
-
-        // Search bar overlay
-        CustomTextField(
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .padding(top = 20.dp)
-                .width(380.dp),
-            value = text,
-            onValueChange = { text = it },
-            placeholder = "Search",
-            clearButton = true,
-            shadow = true,
-
-            leadingContent = {
-                Icon(
-                    imageVector = Icons.Default.Search,
-                    modifier = Modifier
-                        .width(30.dp)
-                        .height(20.dp),
-                    contentDescription = null
-                )
-            },
-
-            trailingContent = {
-                IconButton(
-                    onClick = {},
-                    modifier = Modifier
-                        .width(30.dp)
-                        .height(20.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Person,
-                        modifier = Modifier
-                            .width(30.dp)
-                            .height(20.dp),
-                        contentDescription = null
-                    )
-                }
-            }
-        )
-    }
+    DiscoverMap(
+        navController = navController
+    )
 }
