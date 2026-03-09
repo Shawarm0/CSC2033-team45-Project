@@ -151,7 +151,6 @@ class AuthViewModelTest {
             createdAt = Instant.fromEpochMilliseconds(0),
             isActive = true,
             lastLoginAt = null,
-            passwordHash = ""
         )
 
         coEvery { userRep.observeSession() } returns flowOf(fakeUser)
