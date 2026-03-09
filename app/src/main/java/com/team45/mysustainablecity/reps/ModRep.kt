@@ -34,7 +34,7 @@ class ModRep {
     }
 
 
-    suspend fun getModerationHistoryFromPost(postId: Int) {
+    suspend fun getModerationHistoryFromPost(postId: Int): StateFlow<List<Moderation>>{
         val result = client
             .from("moderation")
             .select {
@@ -43,6 +43,7 @@ class ModRep {
             .decodeList<Moderation>()
 
         _moderationHistory.value = result
+        return moderationHistory
     }
 
     suspend fun rejectPost(moderation: Moderation) {
