@@ -15,9 +15,6 @@ import kotlin.uuid.ExperimentalUuidApi
 class AuthViewModel(
     private val userRep: UserRep,
 ): ViewModel() {
-
-    private val client = SupabaseClientProvider.client
-
     private val _authState = MutableStateFlow<User?>(null)
     val authState: StateFlow<User?> = _authState
 
@@ -40,7 +37,7 @@ class AuthViewModel(
         viewModelScope.launch {
             userRep.observeSession().collect { user:User? ->
                 _authState.value = user
-                _isAuthenticated.value = client.auth.currentSessionOrNull()?.user?.id != null
+                _isAuthenticated.value = user != null
 
                 if (user != null) {
                     Log.d("AuthViewModel", "Authenticated user: $user")
