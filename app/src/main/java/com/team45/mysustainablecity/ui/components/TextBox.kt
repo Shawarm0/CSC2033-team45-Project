@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -21,6 +22,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
@@ -34,7 +36,7 @@ import kotlinx.coroutines.launch
 
 
 /**
- * A fully customisable rounded text input field built on top of [BasicTextField].
+ * A fully customizable rounded text input field built on top of [BasicTextField].
  *
  * This composable provides:
  * - Optional label and inline error message
@@ -42,10 +44,10 @@ import kotlinx.coroutines.launch
  * - Leading and trailing content slots (e.g. icons)
  * - Optional clear button
  * - Error state styling
- * - Focus-aware border and text colour changes
+ * - Focus-aware border and text color changes
  * - Keyboard configuration (IME actions, input types, etc.)
  * - Optional numeric filtering via [floatsOnly]
- * - Automatic bring-into-view behaviour when focused
+ * - Automatic bring-into-view behavior when focused
  *
  * @param value The current text value displayed inside the field.
  * @param onValueChange Callback triggered when the text changes.
@@ -88,6 +90,7 @@ fun CustomTextField(
     maxLines: Int = 1,
 
     clearButton: Boolean = false,
+    shadow: Boolean = false,
 
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
@@ -129,13 +132,18 @@ fun CustomTextField(
     ) {
 
         // Label + Error message row (ORIGINAL STYLE)
-        Row {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             if (label != null) {
                 Text(
                     text = label,
                     style = MaterialTheme.typography.bodyLarge.copy(
                         fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        color = if (isError) Color.Red else Color.Black
                     ),
                     modifier = Modifier.padding(end = 5.dp)
                 )
@@ -193,61 +201,77 @@ fun CustomTextField(
                 },
             decorationBox = { innerTextField ->
 
-                Row(
+                Box(
                     modifier = Modifier
-                        .border(
-                            width = 1.dp,
-                            color = borderColor,
-                            shape = RoundedCornerShape(50)
+                        .then(
+                            if (shadow) {
+                                Modifier.shadow(
+                                    elevation = 6.dp,
+                                    shape = RoundedCornerShape(50),
+                                    clip = false
+                                )
+                            } else {
+                                Modifier
+                            }
                         )
-                        .background(
-                            color = LightBoxBackground,
-                            shape = RoundedCornerShape(50)
-                        )
-                        .padding(horizontal = 12.dp, vertical = 10.dp),
-                    verticalAlignment = Alignment.CenterVertically
                 ) {
 
-                    // Leading slot
-                    if (leadingContent != null) {
-                        leadingContent()
-                        Spacer(modifier = Modifier.width(8.dp))
-                    }
-
-                    Box {
-                        if (value.isEmpty()) {
-                            Text(
-                                text = placeholder,
-                                color = if (!isFocused) Color.Gray else Color.Black,
-                                style = MaterialTheme.typography.bodyLarge
+                    Row(
+                        modifier = Modifier
+                            .border(
+                                width = 1.dp,
+                                color = borderColor,
+                                shape = RoundedCornerShape(50)
                             )
-                        }
-                        innerTextField()
-                    }
-
-                    Spacer(modifier = Modifier.weight(1f))
-
-                    // Clear button (original sizing restored)
-                    if (clearButton && value.isNotEmpty() && enabled && !readOnly) {
-                        IconButton(
-                            onClick = { onValueChange("") },
-                            modifier = Modifier
-                                .padding(0.dp)
-                                .width(30.dp)
-                                .height(20.dp),
-                            interactionSource = remember { MutableInteractionSource() }
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Close,
-                                contentDescription = "Clear Text",
-                                tint = iconColor
+                            .background(
+                                color = LightBoxBackground,
+                                shape = RoundedCornerShape(50)
                             )
-                        }
-                    }
+                            .padding(horizontal = 12.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
 
-                    // Trailing slot
-                    if (trailingContent != null) {
-                        trailingContent()
+                        // Leading slot
+                        if (leadingContent != null) {
+                            leadingContent()
+                            Spacer(modifier = Modifier.width(8.dp))
+                        }
+
+                        Box {
+                            if (value.isEmpty()) {
+                                Text(
+                                    text = placeholder,
+                                    color = if (!isFocused) Color.Gray else Color.Black,
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+                            }
+                            innerTextField()
+                        }
+
+                        Spacer(modifier = Modifier.weight(1f))
+
+                        // Clear button (original sizing restored)
+                        if (clearButton && value.isNotEmpty() && enabled && !readOnly) {
+                            IconButton(
+                                onClick = { onValueChange("") },
+                                modifier = Modifier
+                                    .padding(0.dp)
+                                    .width(30.dp)
+                                    .height(20.dp),
+                                interactionSource = remember { MutableInteractionSource() }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Close,
+                                    contentDescription = "Clear Text",
+                                    tint = iconColor
+                                )
+                            }
+                        }
+
+                        // Trailing slot
+                        if (trailingContent != null) {
+                            trailingContent()
+                        }
                     }
                 }
             }
@@ -265,12 +289,14 @@ fun CustomTextField(
  * - Masks input by default using [PasswordVisualTransformation]
  * - Provides a trailing visibility toggle icon
  * - Supports custom keyboard options and IME actions
- * - Inherits styling and behaviour from [CustomTextField]
+ * - Inherits styling and behavior from [CustomTextField]
  *
  * @param modifier Modifier applied to the text field.
  * @param value The current password value.
  * @param onValueChange Callback triggered when the password changes.
  * @param label Label displayed above the field.
+ * @param isError Whether the field is currently in an error state.
+ * @param errorMessage Optional error message displayed next to the label.
  * @param keyboardOptions Software keyboard configuration (IME action, input type, etc.).
  * @param keyboardActions Defines actions triggered from the keyboard (Next, Done, etc.).
  */
@@ -280,6 +306,8 @@ fun PasswordTextField(
     value: String,
     onValueChange: (String) -> Unit,
     label: String = "Password",
+    isError: Boolean = false,
+    errorMessage: String? = null,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default
 ) {
@@ -296,6 +324,8 @@ fun PasswordTextField(
         visualTransformation =
             if (passwordVisible) VisualTransformation.None
             else PasswordVisualTransformation(),
+        isError = isError,
+        errorMessage = errorMessage,
         trailingContent = {
             IconButton(
                 onClick = { passwordVisible = !passwordVisible },
