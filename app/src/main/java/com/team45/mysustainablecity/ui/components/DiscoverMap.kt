@@ -2,40 +2,80 @@ package com.team45.mysustainablecity.ui.components
 
 import android.Manifest
 import android.annotation.SuppressLint
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.MyLocation
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.BottomSheetDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Surface
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.google.accompanist.permissions.*
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MapStyleOptions
-import com.google.maps.android.compose.*
+import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.MapProperties
+import com.google.maps.android.compose.MapUiSettings
+import com.google.maps.android.compose.MarkerComposable
+import com.google.maps.android.compose.MarkerState
+import com.google.maps.android.compose.rememberCameraPositionState
 import com.team45.mysustainablecity.R
-import com.team45.mysustainablecity.utils.*
-import kotlinx.coroutines.launch
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.DirectionsBike
-import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.text.input.ImeAction
 import com.team45.mysustainablecity.ui.screens.ProfileScreen
 import com.team45.mysustainablecity.ui.theme.BottomBarColor
+import com.team45.mysustainablecity.utils.ClusterBottomSheet
+import com.team45.mysustainablecity.utils.ClusterMapMarker
+import com.team45.mysustainablecity.utils.CompassButton
+import com.team45.mysustainablecity.utils.CustomMapMarker
+import com.team45.mysustainablecity.utils.LocationBottomSheet
+import com.team45.mysustainablecity.utils.LocationCluster
+import com.team45.mysustainablecity.utils.MapLocation
+import com.team45.mysustainablecity.utils.Tag
+import com.team45.mysustainablecity.utils.clusterLocations
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class)
 @SuppressLint("MissingPermission")
@@ -288,6 +328,7 @@ fun DiscoverMap(
             }
         }
 
+// In DiscoverMap, update the MapControlButton for MyLocation:
         MapControlButton(
             icon = Icons.Default.MyLocation,
             modifier = Modifier
@@ -299,18 +340,62 @@ fun DiscoverMap(
                     location?.let {
                         coroutineScope.launch {
                             cameraPositionState.animate(
-                                CameraUpdateFactory.newLatLngZoom(LatLng(it.latitude, it.longitude), 15f)
+                                CameraUpdateFactory.newCameraPosition(
+                                    CameraPosition.Builder()
+                                        .target(LatLng(it.latitude, it.longitude))
+                                        .zoom(15f)
+                                        .bearing(0f) // reset to north
+                                        .tilt(0f)
+                                        .build()
+                                )
                             )
                         }
                     }
                 }
             } else {
                 coroutineScope.launch {
-                    cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(newcastle, 16f))
+                    cameraPositionState.animate(
+                        CameraUpdateFactory.newCameraPosition(
+                            CameraPosition.Builder()
+                                .target(newcastle)
+                                .zoom(16f)
+                                .bearing(0f)
+                                .tilt(0f)
+                                .build()
+                        )
+                    )
+                }
+            }
+        }
+
+        // Compass button — bottom start, same height
+        val bearing by remember { derivedStateOf { cameraPositionState.position.bearing } }
+
+// Only show compass when map is rotated away from north
+        if (bearing != 0f) {
+            CompassButton(
+                bearing = bearing,
+                modifier = Modifier
+                    .padding(start = 16.dp, bottom = paddingValues.calculateBottomPadding() + 16.dp)
+                    .align(Alignment.BottomStart)
+            ) {
+                coroutineScope.launch {
+                    cameraPositionState.animate(
+                        CameraUpdateFactory.newCameraPosition(
+                            CameraPosition.Builder()
+                                .target(cameraPositionState.position.target)
+                                .zoom(cameraPositionState.position.zoom)
+                                .bearing(0f)
+                                .tilt(0f)
+                                .build()
+                        )
+                    )
                 }
             }
         }
     }
+
+
 
     selectedCluster?.let { cluster ->
         ModalBottomSheet(
@@ -378,143 +463,314 @@ fun MapControlButton(
 
 val locations = listOf(
 
-    // Quayside Bike Racks — type: BIKE_RACK, status varies
+    // --- Quayside Bike Racks ---
     MapLocation(
         name = "Quayside Bike Rack A",
         position = LatLng(54.9686, -1.6094),
         tags = listOf(Tag.BIKE_RACK, Tag.APPROVED),
         description = "Bike rack near the Quayside restaurants, 12 spaces available.",
-        imageRes = null
     ),
     MapLocation(
         name = "Quayside Bike Rack B",
         position = LatLng(54.9688, -1.6088),
         tags = listOf(Tag.BIKE_RACK, Tag.AWAITING_APPROVAL),
         description = "Bike rack outside the Pitcher & Piano, 8 spaces. Pending council sign-off.",
-        imageRes = null
     ),
     MapLocation(
         name = "Quayside Bike Rack C",
         position = LatLng(54.9684, -1.6099),
         tags = listOf(Tag.BIKE_RACK, Tag.TEMPORARY),
         description = "Temporary covered bike rack near the law courts, 20 spaces. Installed for summer.",
-        imageRes = null
+    ),
+    MapLocation(
+        name = "Quayside Bike Rack D",
+        position = LatLng(54.9690, -1.6102),
+        tags = listOf(Tag.BIKE_RACK, Tag.APPROVED),
+        description = "Bike rack near the Sage car park entrance, 16 spaces.",
+    ),
+    MapLocation(
+        name = "Millennium Bridge Bike Rack",
+        position = LatLng(54.9682, -1.6012),
+        tags = listOf(Tag.BIKE_RACK, Tag.APPROVED),
+        description = "Bike rack at the north end of the Millennium Bridge, 10 spaces.",
     ),
 
-    // Quayside EV Chargers — type: ELECTRIC_CHARGER, status varies
+    // --- Quayside EV Chargers ---
     MapLocation(
         name = "Quayside EV Charger 1",
         position = LatLng(54.9685, -1.6091),
         tags = listOf(Tag.ELECTRIC_CHARGER, Tag.APPROVED),
         description = "Fast EV charging point, 2 bays, 50kW.",
-        imageRes = null
     ),
     MapLocation(
         name = "Quayside EV Charger 2",
         position = LatLng(54.9683, -1.6096),
         tags = listOf(Tag.ELECTRIC_CHARGER, Tag.AWAITING_APPROVAL),
         description = "Proposed standard EV charging point, 4 bays, 22kW. Awaiting planning permission.",
-        imageRes = null
+    ),
+    MapLocation(
+        name = "Quayside EV Charger 3",
+        position = LatLng(54.9687, -1.6080),
+        tags = listOf(Tag.ELECTRIC_CHARGER, Tag.APPROVED),
+        description = "Rapid EV charger near the Malmaison hotel, 2 bays, 150kW.",
+    ),
+    MapLocation(
+        name = "BALTIC Car Park EV",
+        position = LatLng(54.9678, -1.6005),
+        tags = listOf(Tag.ELECTRIC_CHARGER, Tag.APPROVED),
+        description = "EV charging in the BALTIC car park, 6 bays, 22kW.",
     ),
 
-    // City centre issues
+    // --- Quayside Issues ---
+    MapLocation(
+        name = "Broken Cobblestones",
+        position = LatLng(54.9689, -1.6075),
+        tags = listOf(Tag.ISSUE),
+        description = "Several cobblestones loose near the Quayside walkway, trip hazard for pedestrians.",
+    ),
+    MapLocation(
+        name = "Overflowing Bin",
+        position = LatLng(54.9686, -1.6082),
+        tags = listOf(Tag.ISSUE),
+        description = "Public bin overflowing near the Quayside bar strip, reported multiple times.",
+    ),
+
+    // --- City Centre Issues ---
     MapLocation(
         name = "Pothole on Grey Street",
         position = LatLng(54.9748, -1.6140),
         tags = listOf(Tag.ISSUE),
         description = "Large pothole causing hazard for cyclists near the Theatre Royal.",
-        imageRes = null
     ),
     MapLocation(
         name = "Broken Street Light",
         position = LatLng(54.9751, -1.6135),
         tags = listOf(Tag.ISSUE, Tag.TEMPORARY),
         description = "Street light out on Grey Street junction. Temporary fix in place, permanent repair pending.",
-        imageRes = null
     ),
     MapLocation(
         name = "Fly Tipping",
         position = LatLng(54.9745, -1.6148),
         tags = listOf(Tag.ISSUE),
         description = "Illegally dumped rubbish behind Grainger Market.",
-        imageRes = null
+    ),
+    MapLocation(
+        name = "Cracked Pavement",
+        position = LatLng(54.9742, -1.6161),
+        tags = listOf(Tag.ISSUE, Tag.AWAITING_APPROVAL),
+        description = "Cracked and uneven pavement slabs outside Grainger Market entrance, repair approved in principle.",
+
+    ),
+    MapLocation(
+        name = "Graffiti on Monument",
+        position = LatLng(54.9752, -1.6130),
+        tags = listOf(Tag.ISSUE),
+        description = "Graffiti on the base of Grey's Monument plinth. Cleaning scheduled.",
+    ),
+    MapLocation(
+        name = "Blocked Drain",
+        position = LatLng(54.9746, -1.6143),
+        tags = listOf(Tag.ISSUE),
+        description = "Storm drain blocked with debris on Grey Street causing pooling after rain.",
     ),
 
-    // Leazes area
+    // --- City Centre EV Chargers ---
+    MapLocation(
+        name = "Eldon Square EV Hub",
+        position = LatLng(54.9757, -1.6162),
+        tags = listOf(Tag.ELECTRIC_CHARGER, Tag.APPROVED),
+        description = "EV charging hub in the Eldon Square car park, 8 bays, 50kW.",
+    ),
+    MapLocation(
+        name = "John Dobson St EV",
+        position = LatLng(54.9754, -1.6145),
+        tags = listOf(Tag.ELECTRIC_CHARGER, Tag.AWAITING_APPROVAL),
+        description = "Proposed on-street EV chargers on John Dobson Street, 4 bays.",
+    ),
+
+    // --- City Centre Bike Racks ---
+    MapLocation(
+        name = "Monument Bike Rack",
+        position = LatLng(54.9753, -1.6133),
+        tags = listOf(Tag.BIKE_RACK, Tag.APPROVED),
+        description = "Sheffield stand bike rack near Grey's Monument, 20 spaces.",
+    ),
+    MapLocation(
+        name = "Eldon Square Bike Rack",
+        position = LatLng(54.9758, -1.6155),
+        tags = listOf(Tag.BIKE_RACK, Tag.APPROVED),
+        description = "Covered bike rack outside Eldon Square's Percy Street entrance, 30 spaces.",
+    ),
+    MapLocation(
+        name = "Grainger Street Bike Rack",
+        position = LatLng(54.9740, -1.6158),
+        tags = listOf(Tag.BIKE_RACK, Tag.AWAITING_APPROVAL),
+        description = "Proposed new bike rack on Grainger Street. Awaiting highway approval.",
+    ),
+
+    // --- Leazes / St James' area ---
     MapLocation(
         name = "Broken Fence",
         position = LatLng(54.9791, -1.6220),
         tags = listOf(Tag.ISSUE, Tag.AWAITING_APPROVAL),
         description = "Fence along Leazes Park perimeter is broken. Repair request submitted.",
-        imageRes = null
     ),
     MapLocation(
         name = "Leazes Park",
         position = LatLng(54.9789, -1.6218),
         tags = listOf(Tag.GREEN_SPACE, Tag.APPROVED),
         description = "A beautiful Victorian park close to the city centre, perfect for a relaxing walk.",
-        imageRes = null
     ),
     MapLocation(
         name = "Leazes Park Pond",
         position = LatLng(54.9793, -1.6211),
         tags = listOf(Tag.GREEN_SPACE, Tag.AWAITING_APPROVAL),
         description = "Proposed wildlife conservation area around the pond. Awaiting council approval.",
-        imageRes = null
     ),
-
-    // St James' area
+    MapLocation(
+        name = "Leazes Park Bike Rack",
+        position = LatLng(54.9787, -1.6224),
+        tags = listOf(Tag.BIKE_RACK, Tag.APPROVED),
+        description = "Bike rack at the main entrance to Leazes Park, 14 spaces.",
+    ),
+    MapLocation(
+        name = "Leazes Park EV Bay",
+        position = LatLng(54.9785, -1.6228),
+        tags = listOf(Tag.ELECTRIC_CHARGER, Tag.TEMPORARY),
+        description = "Temporary EV charging bay installed near Leazes Park for the football season.",
+    ),
     MapLocation(
         name = "New Cycle Lane",
         position = LatLng(54.9756, -1.6218),
         tags = listOf(Tag.BIKE_RACK, Tag.APPROVED),
         description = "Approved protected cycle lane running alongside St James' Park.",
-        imageRes = null
     ),
     MapLocation(
         name = "St James' EV Bays",
         position = LatLng(54.9758, -1.6214),
         tags = listOf(Tag.ELECTRIC_CHARGER, Tag.AWAITING_APPROVAL),
         description = "Proposed EV charging bays in the St James' car park. Community consultation ongoing.",
-        imageRes = null
+    ),
+    MapLocation(
+        name = "St James' Park Litter",
+        position = LatLng(54.9760, -1.6221),
+        tags = listOf(Tag.ISSUE),
+        description = "Persistent litter problem on the approach to St James' Park on match days.",
+    ),
+    MapLocation(
+        name = "Gallowgate Green Space",
+        position = LatLng(54.9762, -1.6210),
+        tags = listOf(Tag.GREEN_SPACE, Tag.AWAITING_APPROVAL),
+        description = "Proposed pocket park on unused land off Gallowgate. Planning application submitted.",
     ),
 
-    // Central Station area
+    // --- Central Station area ---
     MapLocation(
         name = "Central Station EV Hub",
         position = LatLng(54.9684, -1.6178),
         tags = listOf(Tag.ELECTRIC_CHARGER, Tag.APPROVED),
         description = "Approved EV charging hub outside Central Station, 10 bays.",
-        imageRes = null
     ),
     MapLocation(
         name = "Central Station Bike Shelter",
         position = LatLng(54.9687, -1.6171),
         tags = listOf(Tag.BIKE_RACK, Tag.AWAITING_APPROVAL),
         description = "Proposed covered bike shelter for 50 bikes outside the station.",
-        imageRes = null
     ),
     MapLocation(
         name = "Station Road Roadworks",
         position = LatLng(54.9682, -1.6183),
         tags = listOf(Tag.ISSUE, Tag.TEMPORARY),
         description = "Temporary road closure outside Central Station for utility works. Expected until end of month.",
-        imageRes = null
+    ),
+    MapLocation(
+        name = "Station Taxi Rank Issue",
+        position = LatLng(54.9680, -1.6175),
+        tags = listOf(Tag.ISSUE),
+        description = "Taxi rank blocking the pavement outside the station entrance, accessibility concern.",
+    ),
+    MapLocation(
+        name = "Neville Street Bike Rack",
+        position = LatLng(54.9683, -1.6168),
+        tags = listOf(Tag.BIKE_RACK, Tag.APPROVED),
+        description = "Bike rack on Neville Street near the station exit, 18 spaces.",
     ),
 
-    // Untagged landmarks — no status, just points of interest
+    // --- Ouseburn / East End ---
+    MapLocation(
+        name = "Ouseburn Valley Green Space",
+        position = LatLng(54.9712, -1.5981),
+        tags = listOf(Tag.GREEN_SPACE, Tag.APPROVED),
+        description = "Community green space in the Ouseburn Valley, managed by the Ouseburn Trust.",
+    ),
+    MapLocation(
+        name = "Ouseburn Bike Rack",
+        position = LatLng(54.9715, -1.5976),
+        tags = listOf(Tag.BIKE_RACK, Tag.APPROVED),
+        description = "Bike rack outside the Cluny music venue, 8 spaces.",
+    ),
+    MapLocation(
+        name = "Ouseburn Fly Tipping",
+        position = LatLng(54.9708, -1.5990),
+        tags = listOf(Tag.ISSUE),
+        description = "Dumped mattresses and furniture near the Ouseburn river path.",
+    ),
+    MapLocation(
+        name = "Ouseburn EV Charger",
+        position = LatLng(54.9710, -1.5985),
+        tags = listOf(Tag.ELECTRIC_CHARGER, Tag.AWAITING_APPROVAL),
+        description = "Proposed EV charger for the Ouseburn creative quarter car park, 4 bays.",
+    ),
+
+    // --- Jesmond ---
+    MapLocation(
+        name = "Jesmond Dene Green Space",
+        position = LatLng(54.9881, -1.5986),
+        tags = listOf(Tag.GREEN_SPACE, Tag.APPROVED),
+        description = "A beloved wooded dene running through Jesmond, maintained by the city council.",
+    ),
+    MapLocation(
+        name = "Jesmond Road EV Charger",
+        position = LatLng(54.9842, -1.6041),
+        tags = listOf(Tag.ELECTRIC_CHARGER, Tag.APPROVED),
+        description = "On-street EV charger on Jesmond Road, 2 bays, 7kW.",
+    ),
+    MapLocation(
+        name = "Jesmond Metro Bike Rack",
+        position = LatLng(54.9839, -1.6038),
+        tags = listOf(Tag.BIKE_RACK, Tag.APPROVED),
+        description = "Bike rack at Jesmond Metro station, 24 spaces, covered.",
+    ),
+    MapLocation(
+        name = "Osborne Road Pothole",
+        position = LatLng(54.9845, -1.6052),
+        tags = listOf(Tag.ISSUE),
+        description = "Deep pothole on Osborne Road near the restaurant strip, reported by multiple residents.",
+    ),
+
+    // --- Untagged landmarks ---
     MapLocation(
         name = "Tyne Bridge",
         position = LatLng(54.9679, -1.6051),
         tags = emptyList(),
         description = "The iconic green arch bridge spanning the River Tyne.",
-        imageRes = null
     ),
     MapLocation(
         name = "Grey's Monument",
         position = LatLng(54.9751, -1.6131),
         tags = emptyList(),
         description = "A tall column commemorating Earl Grey, the former Prime Minister.",
-        imageRes = null
+    ),
+    MapLocation(
+        name = "Newcastle Cathedral",
+        position = LatLng(54.9726, -1.6154),
+        tags = emptyList(),
+        description = "The Cathedral Church of St Nicholas, a stunning medieval building in the heart of Newcastle.",
+    ),
+    MapLocation(
+        name = "Grainger Market",
+        position = LatLng(54.9742, -1.6155),
+        tags = emptyList(),
+        description = "A covered Victorian market in the city centre, one of the oldest in Europe. A covered Victorian market in the city centre, one of the oldest in Europe. A covered Victorian market in the city centre, one of the oldest in Europe.",
     ),
 )

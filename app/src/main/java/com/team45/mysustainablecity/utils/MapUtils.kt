@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.DirectionsBike
 import androidx.compose.material.icons.filled.EvStation
 import androidx.compose.material.icons.filled.HourglassEmpty
+import androidx.compose.material.icons.filled.Navigation
 import androidx.compose.material.icons.filled.Park
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Schedule
@@ -27,10 +28,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -88,7 +91,6 @@ data class MapLocation(
     val position: LatLng,
     val tags: List<Tag> = emptyList(),
     val description: String,
-    val imageRes: Int? = null
 ) {
     val primaryTag: Tag? get() = tags.firstOrNull()
     val color: Color get() = primaryTag?.color ?: Color(0xFF2196F3)
@@ -185,18 +187,6 @@ fun LocationBottomSheet(
             .padding(bottom = 32.dp)
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
-            location.imageRes?.let { imageRes ->
-                Image(
-                    painter = painterResource(id = imageRes),
-                    contentDescription = location.name,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(200.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-            }
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -263,7 +253,9 @@ fun LocationBottomSheet(
                 text = location.description,
                 fontSize = 15.sp,
                 color = Color.Gray,
-                lineHeight = 22.sp
+                lineHeight = 22.sp,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
             )
         }
     }
@@ -362,20 +354,6 @@ private fun ClusterLocationRow(
     onDismiss: () -> Unit
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
-        // Optional image
-        location.imageRes?.let { imageRes ->
-            Image(
-                painter = painterResource(id = imageRes),
-                contentDescription = location.name,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(160.dp)
-                    .clip(RoundedCornerShape(10.dp))
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-        }
-
         // Name row with color dot + nav button
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -422,7 +400,9 @@ private fun ClusterLocationRow(
             text = location.description,
             fontSize = 14.sp,
             color = Color.Gray,
-            lineHeight = 20.sp
+            lineHeight = 20.sp,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis
         )
     }
 }
@@ -516,5 +496,32 @@ fun CustomPin(
             tint = Color.White,
             modifier = Modifier.size(18.dp)
         )
+    }
+}
+
+
+@Composable
+fun CompassButton(
+    bearing: Float,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    Surface(
+        modifier = modifier.size(60.dp),
+        shape = CircleShape,
+        shadowElevation = 6.dp,
+        color = Color.White
+    ) {
+        IconButton(onClick = onClick) {
+            // Rotate the compass needle icon to match the map bearing
+            Icon(
+                imageVector = Icons.Default.Navigation,
+                modifier = Modifier
+                    .size(28.dp)
+                    .graphicsLayer { rotationZ = -bearing },
+                contentDescription = "Reset north",
+                tint = Color.Black
+            )
+        }
     }
 }
