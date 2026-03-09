@@ -3,6 +3,7 @@ package com.team45.mysustainablecity.ui.screens
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
@@ -19,10 +20,11 @@ fun PostScreen(
     authViewModel: AuthViewModel,
     innerNavController: NavHostController,
     locationName: String?,
+    paddingValues: PaddingValues
 ) {
 
     Column(
-        modifier = Modifier.fillMaxSize().background(Background),
+        modifier = Modifier.fillMaxSize().background(Background).padding(paddingValues),
     ) {
         if (locationName != null) {
             Text(text = locationName)

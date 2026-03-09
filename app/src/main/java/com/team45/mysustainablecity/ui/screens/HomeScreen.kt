@@ -16,9 +16,11 @@ import com.team45.mysustainablecity.ui.components.DiscoverMap
 
 @Composable
 fun HomeScreen(
-    navController: NavController
+    navController: NavController,
+    paddingValues: PaddingValues
 ) {
     DiscoverMap(
-        navController = navController
+        navController = navController,
+        paddingValues
     )
 }

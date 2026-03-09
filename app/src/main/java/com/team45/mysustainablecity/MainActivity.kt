@@ -288,7 +288,6 @@ fun MainScaffold(
         NavHost(
             navController = innerNavController,
             startDestination = Screen.Home.route,
-            modifier = Modifier.padding(padding),
             enterTransition = {
                 val to = targetState.destination.route
                 if (to == Screen.DiscoverPost.route) {
@@ -314,17 +313,23 @@ fun MainScaffold(
 
         ) {
             composable(Screen.Home.route) {
-                HomeScreen(innerNavController)
+                HomeScreen(
+                    innerNavController,
+                    padding
+                )
             }
             composable(Screen.Discover.route) {
-                DiscoverScreen(authViewModel)
+                DiscoverScreen(
+                    authViewModel,
+                    padding
+                )
             }
             composable(
                 route = Screen.DiscoverPost.route,
                 arguments = listOf(navArgument("locationName") { nullable = true })
             ) { backStackEntry ->
                 val locationName = backStackEntry.arguments?.getString("locationName")
-                PostScreen(authViewModel, innerNavController, locationName)
+                PostScreen(authViewModel, innerNavController, locationName, padding)
             }
             composable(Screen.Alerts.route) {
                 //AlertScreen(innerNavController)

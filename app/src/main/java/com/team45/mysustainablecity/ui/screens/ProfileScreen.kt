@@ -48,7 +48,7 @@ data class ProfileMenuItem(
 @Composable
 fun ProfileScreen(
     navController: NavController,
-    username: String = "Username"
+    username: String = "Username",
 ) {
     val menuItems = listOf(
         ProfileMenuItem("Account", Icons.Default.AccountBox) {},
@@ -69,17 +69,9 @@ fun ProfileScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
-                .verticalScroll(rememberScrollState()),
+                .padding(innerPadding),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Map part (green placeholder)
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(80.dp)
-                    .background(Color(0xFFDDEEDD))
-            )
 
             Spacer(modifier = Modifier.height(16.dp))
 

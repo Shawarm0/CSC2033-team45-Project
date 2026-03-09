@@ -33,11 +33,16 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
+import com.team45.mysustainablecity.ui.screens.ProfileScreen
+import com.team45.mysustainablecity.ui.theme.BottomBarColor
 
 @OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class)
 @SuppressLint("MissingPermission")
 @Composable
-fun DiscoverMap(navController: NavController) {
+fun DiscoverMap(
+    navController: NavController,
+    paddingValues: PaddingValues
+) {
 
     var text by remember { mutableStateOf("") }
     var activeFilters by remember { mutableStateOf<Set<Tag>>(emptySet()) }
@@ -45,6 +50,10 @@ fun DiscoverMap(navController: NavController) {
 
     // Derived: are we actively searching?
     val isSearching = text.isNotBlank()
+    val showProfile = remember { mutableStateOf(false) }
+    val profileSheetState = rememberModalBottomSheetState(
+        skipPartiallyExpanded = true,
+    )
 
     // The locations to show on the map:
     // - If searching and committed (Enter pressed): search results, filters ignored
@@ -176,7 +185,7 @@ fun DiscoverMap(navController: NavController) {
             modifier = Modifier
                 .fillMaxWidth()
                 .align(Alignment.TopCenter)
-                .padding(top = 30.dp, start = 16.dp, end = 16.dp),
+                .padding(top = paddingValues.calculateTopPadding(), start = 16.dp, end = 16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             CustomTextField(
@@ -217,7 +226,9 @@ fun DiscoverMap(navController: NavController) {
                 trailingContent = {
                     if (!isSearching) {
                         IconButton(
-                            onClick = {},
+                            onClick = {
+                                showProfile.value = true
+                            },
                             modifier = Modifier.width(30.dp).height(20.dp)
                         ) {
                             Icon(
@@ -249,7 +260,7 @@ fun DiscoverMap(navController: NavController) {
                                 Icon(
                                     imageVector = tag.icon,
                                     contentDescription = null,
-                                    tint = if (isSelected) tag.color else Color.Gray,
+                                    tint = if (isSelected) Color.White else Color(0xFF141414),
                                     modifier = Modifier.size(16.dp)
                                 )
                             }
@@ -262,7 +273,7 @@ fun DiscoverMap(navController: NavController) {
         MapControlButton(
             icon = Icons.Default.MyLocation,
             modifier = Modifier
-                .padding(end = 16.dp, bottom = 16.dp)
+                .padding(end = 16.dp, bottom = paddingValues.calculateBottomPadding() + 16.dp)
                 .align(Alignment.BottomEnd)
         ) {
             if (locationPermissionState.status.isGranted) {
@@ -303,6 +314,19 @@ fun DiscoverMap(navController: NavController) {
                     onDismiss = { selectedCluster = null }
                 )
             }
+        }
+    }
+
+    if (showProfile.value) {
+        ModalBottomSheet(
+            onDismissRequest = { showProfile.value = false },
+            sheetState = profileSheetState,
+            containerColor = BottomBarColor,
+            dragHandle = { BottomSheetDefaults.DragHandle() },
+            contentWindowInsets = { WindowInsets.statusBars },
+            modifier = Modifier.fillMaxHeight()
+        ) {
+            ProfileScreen(navController)
         }
     }
 }
