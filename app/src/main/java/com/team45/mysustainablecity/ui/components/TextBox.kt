@@ -90,6 +90,7 @@ fun CustomTextField(
     maxLines: Int = 1,
 
     clearButton: Boolean = false,
+    onClear: () -> Unit = {},
     shadow: Boolean = false,
 
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
@@ -253,7 +254,10 @@ fun CustomTextField(
                         // Clear button (original sizing restored)
                         if (clearButton && value.isNotEmpty() && enabled && !readOnly) {
                             IconButton(
-                                onClick = { onValueChange("") },
+                                onClick = {
+                                    onValueChange("")
+                                    onClear()
+                                          },
                                 modifier = Modifier
                                     .padding(0.dp)
                                     .width(30.dp)

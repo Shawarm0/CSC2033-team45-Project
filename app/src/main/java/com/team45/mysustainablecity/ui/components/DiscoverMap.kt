@@ -27,6 +27,12 @@ import com.google.maps.android.compose.*
 import com.team45.mysustainablecity.R
 import com.team45.mysustainablecity.utils.*
 import kotlinx.coroutines.launch
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.input.ImeAction
 
 @OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class)
 @SuppressLint("MissingPermission")
@@ -35,6 +41,31 @@ fun DiscoverMap(navController: NavController) {
 
     var text by remember { mutableStateOf("") }
     var activeFilters by remember { mutableStateOf<Set<Tag>>(emptySet()) }
+    var isSearchCommitted by remember { mutableStateOf(false) }
+
+    // Derived: are we actively searching?
+    val isSearching = text.isNotBlank()
+
+    // The locations to show on the map:
+    // - If searching and committed (Enter pressed): search results, filters ignored
+    // - If searching and not committed (typing): search results, filters ignored
+    // - If not searching: apply filters (or all if no filters)
+    val visibleLocations by remember(text, activeFilters, isSearchCommitted) {
+        derivedStateOf {
+            when {
+                isSearching -> locations.filter {
+                    it.name.contains(text.trim(), ignoreCase = true)
+                }
+                activeFilters.isEmpty() -> locations
+                else -> locations.filter { it.tag != null && it.tag in activeFilters }
+            }
+        }
+    }
+
+    // Top search result — camera moves here
+    val topResult by remember(visibleLocations, isSearching) {
+        derivedStateOf { if (isSearching) visibleLocations.firstOrNull() else null }
+    }
 
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -49,8 +80,7 @@ fun DiscoverMap(navController: NavController) {
 
     val zoom by remember { derivedStateOf { cameraPositionState.position.zoom } }
 
-    // Filter locations first, then cluster
-    val clusters by remember(zoom, activeFilters) {
+    val clusters by remember(zoom, visibleLocations) {
         derivedStateOf {
             val thresholdMeters = when {
                 zoom >= 16f -> 80.0
@@ -58,17 +88,24 @@ fun DiscoverMap(navController: NavController) {
                 zoom >= 14f -> 250.0
                 else        -> 400.0
             }
-            val filtered = if (activeFilters.isEmpty()) {
-                locations
-            } else {
-                locations.filter { it.tag != null && it.tag in activeFilters }
-            }
-            clusterLocations(filtered, thresholdMeters)
+            clusterLocations(visibleLocations, thresholdMeters)
+        }
+    }
+
+    // Move camera to top result as user types
+    LaunchedEffect(topResult) {
+        topResult?.let {
+            cameraPositionState.animate(
+                CameraUpdateFactory.newLatLngZoom(it.position, 16f)
+            )
         }
     }
 
     var selectedCluster by remember { mutableStateOf<LocationCluster?>(null) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
+
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val focusManager = LocalFocusManager.current
 
     LaunchedEffect(Unit) { locationPermissionState.launchPermissionRequest() }
 
@@ -145,10 +182,31 @@ fun DiscoverMap(navController: NavController) {
             CustomTextField(
                 modifier = Modifier,
                 value = text,
-                onValueChange = { text = it },
+                onValueChange = {
+                    text = it
+                    // If user edits after committing, un-commit so filters are still ignored while typing
+                    if (isSearchCommitted) isSearchCommitted = false
+                },
                 placeholder = "Search",
                 clearButton = true,
                 shadow = true,
+                // Clear button resets search entirely → filters resume
+                onClear = {
+                    text = ""
+                    isSearchCommitted = false
+                    selectedCluster = null
+                },
+                keyboardOptions = KeyboardOptions(
+                    imeAction = ImeAction.Search
+                ),
+                keyboardActions = KeyboardActions(
+                    onSearch = {
+                        // Commit the search — filters stay ignored, keyboard dismissed
+                        isSearchCommitted = true
+                        keyboardController?.hide()
+                        focusManager.clearFocus()
+                    }
+                ),
                 leadingContent = {
                     Icon(
                         imageVector = Icons.Default.Search,
@@ -157,47 +215,46 @@ fun DiscoverMap(navController: NavController) {
                     )
                 },
                 trailingContent = {
-                    IconButton(
-                        onClick = {},
-                        modifier = Modifier.width(30.dp).height(20.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Person,
-                            modifier = Modifier.width(30.dp).height(20.dp),
-                            contentDescription = null
-                        )
+                    if (!isSearching) {
+                        IconButton(
+                            onClick = {},
+                            modifier = Modifier.width(30.dp).height(20.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Person,
+                                modifier = Modifier.width(30.dp).height(20.dp),
+                                contentDescription = null
+                            )
+                        }
                     }
                 }
             )
 
-            // Filter pills row
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                contentPadding = PaddingValues(horizontal = 4.dp)
-            ) {
-                items(Tag.entries) { tag ->
-                    val isSelected = tag in activeFilters
-                    FilterPill(
-                        text = tag.displayName,
-                        isSelected = isSelected,
-                        onClick = {
-                            activeFilters = if (isSelected) {
-                                activeFilters - tag
-                            } else {
-                                activeFilters + tag
+            // Hide filter pills while search is active
+            if (!isSearching) {
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    contentPadding = PaddingValues(horizontal = 4.dp)
+                ) {
+                    items(Tag.entries) { tag ->
+                        val isSelected = tag in activeFilters
+                        FilterPill(
+                            text = tag.displayName,
+                            isSelected = isSelected,
+                            onClick = {
+                                activeFilters = if (isSelected) activeFilters - tag else activeFilters + tag
+                                selectedCluster = null
+                            },
+                            icon = {
+                                Icon(
+                                    imageVector = tag.icon,
+                                    contentDescription = null,
+                                    tint = if (isSelected) tag.color else Color.Gray,
+                                    modifier = Modifier.size(16.dp)
+                                )
                             }
-                            // Deselect any open sheet if its locations are now filtered out
-                            selectedCluster = null
-                        },
-                        icon = {
-                            Icon(
-                                imageVector = tag.icon,
-                                contentDescription = null,
-                                tint = if (isSelected) Color.White else Color(0xFF141414),
-                                modifier = Modifier.size(16.dp)
-                            )
-                        }
-                    )
+                        )
+                    }
                 }
             }
         }
