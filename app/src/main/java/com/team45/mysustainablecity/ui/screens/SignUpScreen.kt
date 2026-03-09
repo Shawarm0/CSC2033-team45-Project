@@ -1,5 +1,6 @@
 package com.team45.mysustainablecity.ui.screens
 
+import android.util.Log
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -80,10 +81,9 @@ fun SignUpScreen(
         containerColor = BottomBarColor
     ) { innerPadding ->
 
-
         Canvas(
             modifier = Modifier.fillMaxSize()
-        ) {
+        ) { // Box Composable
 
             val figmaWidth = 888f
             val figmaHeight = 412f
@@ -94,11 +94,9 @@ fun SignUpScreen(
             val rectWidth = 808f * scaleX
             val rectHeight = 324f * scaleY
 
-            // Position (change these to move rectangle)
             val offsetX = -900f
             val offsetY = -800f
 
-            // Calculate center of rectangle
             val pivotX = offsetX + rectWidth / 2f
             val pivotY = offsetY + rectHeight / 2f
 
@@ -114,14 +112,12 @@ fun SignUpScreen(
             }
         }
 
-
+        // CONTENT
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-
-
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -130,11 +126,14 @@ fun SignUpScreen(
                 verticalArrangement = Arrangement.Center
             ) {
 
+                // HEADER
                 Text(
                     text = "Sign Up",
                     style = MaterialTheme.typography.displayLarge
                 )
+
                 Spacer(modifier = Modifier.height(5.dp))
+
                 Text(
                     text = "Enter email and password to proceed",
                     style = MaterialTheme.typography.bodyLarge.copy(
@@ -143,10 +142,10 @@ fun SignUpScreen(
                 )
 
 
-
                 Spacer(modifier = Modifier.height(20.dp))
 
 
+                // CENTER CONTENT
                 CustomTextField(
                     modifier = Modifier
                         .width(350.dp)
@@ -154,7 +153,12 @@ fun SignUpScreen(
                     value = email,
                     placeholder = "testemail@gmail.com",
                     label = "Email",
-                    onValueChange = { email = it },
+                    errorMessage = errorState.value,
+                    isError = errorState.value != null,
+                    onValueChange = {
+                        email = it
+                        authViewModel.clearError()
+                                    },
                     keyboardOptions = KeyboardOptions(
                         imeAction = ImeAction.Next
                     ),
@@ -164,8 +168,8 @@ fun SignUpScreen(
                         }
                     )
                 )
-                Spacer(modifier = Modifier.height(13.dp))
 
+                Spacer(modifier = Modifier.height(13.dp))
 
                 CustomTextField(
                     modifier = Modifier
@@ -174,7 +178,10 @@ fun SignUpScreen(
                     value = confirmEmail,
                     placeholder = "testemail@gmail.com",
                     label = "Confirm Email",
-                    onValueChange = { confirmEmail = it },
+                    isError = errorState.value != null,
+                    onValueChange = {
+                        confirmEmail = it
+                        authViewModel.clearError() },
                     keyboardOptions = KeyboardOptions(
                         imeAction = ImeAction.Next
                     ),
@@ -184,8 +191,8 @@ fun SignUpScreen(
                         }
                     )
                 )
-                Spacer(modifier = Modifier.height(13.dp))
 
+                Spacer(modifier = Modifier.height(13.dp))
 
                 PasswordTextField(
                     modifier = Modifier
@@ -196,6 +203,7 @@ fun SignUpScreen(
                     keyboardOptions = KeyboardOptions(
                         imeAction = ImeAction.Done
                     ),
+                    isError = errorState.value != null,
                     keyboardActions = KeyboardActions(
                         onDone = {
                             focusManager.clearFocus()
@@ -203,18 +211,18 @@ fun SignUpScreen(
                     )
                 )
 
-
                 Spacer(modifier = Modifier.height(20.dp))
 
                 AppButton(
                     modifier = Modifier.width(170.dp),
                     onClick = {
                         if (email.isBlank() || password.isBlank()) {
+                            authViewModel.errorState("Email and password cannot be blank")
                             return@AppButton
                         }
 
                         if (email != confirmEmail) {
-                            // You could set local error state here
+                            authViewModel.errorState("Emails do not match")
                             return@AppButton
                         }
 
@@ -222,6 +230,7 @@ fun SignUpScreen(
                             email = email,
                             password = password,
                         )
+                        Log.d("SignUpScreen", "----- Register request sent -----\n\n")
                     },
                     text = if (isLoading.value) "Loading..." else "Sign Up",
                     symbol = Icons.Default.Check,
@@ -236,6 +245,7 @@ fun SignUpScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
+
                 HorizontalDivider(
                     modifier = Modifier.width(330.dp),
                     color = Color.Black,
@@ -261,8 +271,6 @@ fun SignUpScreen(
                     )
                 }
             }
-
-
         }
     }
 }

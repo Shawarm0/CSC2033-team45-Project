@@ -5,6 +5,8 @@ import com.team45.mysustainablecity.data.classes.Alert
 import com.team45.mysustainablecity.data.classes.User
 import com.team45.mysustainablecity.data.remote.SupabaseClientProvider
 import io.github.jan.supabase.auth.auth
+import io.github.jan.supabase.auth.exception.AuthRestException
+import io.github.jan.supabase.auth.exception.AuthWeakPasswordException
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.auth.status.SessionStatus
 import io.github.jan.supabase.postgrest.from
@@ -25,27 +27,20 @@ class UserRep {
     /**
      * Register user with Supabase Auth + insert profile
      */
-    @OptIn(ExperimentalUuidApi::class)
-    suspend fun registerUser(
-        email: String,
-        password: String,
-    ) {
+    suspend fun registerUser(email: String, password: String) {
         client.auth.signUpWith(Email) {
             this.email = email
             this.password = password
         }
     }
+
     //suspend because needs to pause without blocking main thread
     suspend fun loginUser(email: String, password: String) {
-        try {
-            val result = client.auth.signInWith(Email) {
-                this.email = email
-                this.password = password
-            }
-            Log.d("UserRep", "Sign in result: $result")
-        } catch (e: Exception) {
-            Log.e("UserRep", "Login failed: ${e.message}")
+        val result = client.auth.signInWith(Email) {
+            this.email = email
+            this.password = password
         }
+        Log.d("UserRep", "----- Sign in result: $result -----")
     }
 
     suspend fun logout() {
@@ -54,32 +49,24 @@ class UserRep {
 
     @OptIn(ExperimentalUuidApi::class)
     fun observeSession(): Flow<User?> = flow {
-
         Log.d("UserRep", "Starting session observation")
 
+        // Emit based on existing session FIRST before collecting status updates
         val existing = client.auth.currentSessionOrNull()
-
         if (existing != null) {
             Log.d("UserRep", "Existing session found")
             emit(loadUser(existing.user?.id))
         } else {
             Log.d("UserRep", "No existing session")
-            emit(null)
+            emit(null)  // Only emit null if we genuinely have no session
         }
 
+        // Then continue watching for changes (login/logout events)
         client.auth.sessionStatus.collect { status ->
-
             Log.d("UserRep", "Session status update: $status")
-
             when (status) {
-                is SessionStatus.Authenticated -> {
-                    emit(loadUser(status.session.user?.id))
-                }
-
-                is SessionStatus.NotAuthenticated -> {
-                    emit(null)
-                }
-
+                is SessionStatus.Authenticated -> emit(loadUser(status.session.user?.id))
+                is SessionStatus.NotAuthenticated -> emit(null)
                 else -> Unit
             }
         }

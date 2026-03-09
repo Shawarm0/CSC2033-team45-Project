@@ -12,18 +12,20 @@ import io.github.jan.supabase.auth.exception.AuthRestException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import kotlin.uuid.ExperimentalUuidApi
+
 class AuthViewModel(
     private val userRep: UserRep,
 ): ViewModel() {
-
     private val client = SupabaseClientProvider.client
 
     private val _authState = MutableStateFlow<User?>(null)
     val authState: StateFlow<User?> = _authState
 
     private val _isAuthenticated = MutableStateFlow(false)
-    val isAuthenticated: StateFlow<Boolean> = _isAuthenticated
+    var isAuthenticated: StateFlow<Boolean> = _isAuthenticated
+
+    private val _isSessionReady = MutableStateFlow(false)
+    val isSessionReady: StateFlow<Boolean> = _isSessionReady
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
@@ -45,11 +47,12 @@ class AuthViewModel(
             userRep.observeSession().collect { user:User? ->
                 _authState.value = user
                 _isAuthenticated.value = client.auth.currentSessionOrNull()?.user?.id != null
+                _isSessionReady.value = true
 
                 if (user != null) {
-                    Log.d("AuthViewModel", "Authenticated user: $user")
+                    Log.d("AuthViewModel", "----- Authenticated user: $user -----")
                 } else {
-                    Log.d("AuthViewModel", "User is null")
+                    Log.d("AuthViewModel", "----- User is null -----")
                 }
             }
         }
@@ -65,12 +68,12 @@ class AuthViewModel(
 
             try {
                 userRep.registerUser(email, password)
-                Log.d("AuthViewModel", "register requested")
+                Log.d("AuthViewModel", "register requested\n\n")
             } catch (e: AuthRestException) {
-                _errorState.value = e.description
+                _errorState.value = e.message
             } catch (e: Exception) {
                 _errorState.value = e.message ?: "User creation failed"
-                Log.e("AuthViewModel", "Auth error: ${e.message}")
+                Log.e("AuthViewModel", "----- Auth error: ${e.message} -----")
             } finally {
                 _isLoading.value = false
             }
@@ -84,12 +87,12 @@ class AuthViewModel(
 
             try {
                 userRep.loginUser(email, password)
-                Log.d("AuthViewModel", "Login request sent")
+                Log.d("AuthViewModel", "----- Login request sent -----\n\n")
             } catch (e: AuthRestException) {
-                Log.e("AuthViewModel", "Auth error: ${e.description}")
-                _errorState.value = e.description
+                Log.e("AuthViewModel", "----- Auth error: ${e.description} -----")
+                _errorState.value = "Login failed, Email or Password is incorrect."
             } catch (e: Exception) {
-                Log.e("AuthViewModel", "Login failed: ${e.message}")
+                Log.e("AuthViewModel", "----- Login failed: ${e.message} -----\n\n")
                 _errorState.value = e.message
             } finally {
                 _isLoading.value = false
@@ -97,6 +100,9 @@ class AuthViewModel(
         }
     }
 
+    fun errorState(message: String) {
+        _errorState.value = message
+    }
     /**
      * Update user profile
      */
@@ -181,4 +187,10 @@ class AuthViewModel(
             }
         }
     }
+
+
+    fun clearError() {
+        _errorState.value = null
+    }
+
 }
