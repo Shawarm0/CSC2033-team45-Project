@@ -10,6 +10,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.DirectionsBike
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.DirectionsBike
 import androidx.compose.material.icons.filled.EvStation
@@ -60,11 +61,11 @@ enum class Tag {
 
     val color: Color get() = when (this) {
         TEMPORARY -> Color(0xFFF57C00)
-        AWAITING_APPROVAL -> Color(0xFF1976D2)
+        AWAITING_APPROVAL -> Color(0xFF9C27B0)
         APPROVED -> Color(0xFF388E3C)
-        ELECTRIC_CHARGER -> Color(0xFF00897B)
-        BIKE_RACK -> Color(0xFF8E24AA)
-        GREEN_SPACE -> Color(0xFF43A047)
+        ELECTRIC_CHARGER -> Color(0xFF1976D2)
+        BIKE_RACK -> Color(0xFF00897B)
+        GREEN_SPACE -> Color(0xFF1E8449)
         ISSUE -> Color(0xFFE53935)
     }
 
@@ -73,7 +74,7 @@ enum class Tag {
         AWAITING_APPROVAL -> Icons.Default.HourglassEmpty
         APPROVED          -> Icons.Default.CheckCircle
         ELECTRIC_CHARGER  -> Icons.Default.EvStation
-        BIKE_RACK         -> Icons.Default.DirectionsBike
+        BIKE_RACK         -> Icons.AutoMirrored.Filled.DirectionsBike
         GREEN_SPACE       -> Icons.Default.Park
         ISSUE             -> Icons.Default.Warning
     }
@@ -82,12 +83,21 @@ enum class Tag {
 data class MapLocation(
     val name: String,
     val position: LatLng,
-    val color: Color,
-    val tag: Tag? = null,
+    val tags: List<Tag> = emptyList(),
     val icon: ImageVector,
     val description: String,
     val imageRes: Int? = null
-)
+) {
+    val primaryTag: Tag? get() = tags.firstOrNull()
+    val color: Color get() = primaryTag?.color ?: Color(0xFF546E7A)
+
+    // Returns the color based on which filter is active
+    fun colorForFilter(activeFilters: Set<Tag>): Color {
+        if (activeFilters.isEmpty()) return color
+        val matchingTag = tags.firstOrNull { it in activeFilters }
+        return matchingTag?.color ?: color
+    }
+}
 
 /** A cluster groups one or more MapLocations that are close together. */
 data class LocationCluster(
@@ -96,7 +106,10 @@ data class LocationCluster(
 ) {
     val isSingle: Boolean get() = locations.size == 1
     val single: MapLocation get() = locations.first()
-    val color: Color get() = if (isSingle) single.color else Color(0xFF546E7A)
+
+    fun color(activeFilters: Set<Tag>): Color {
+        return if (isSingle) single.colorForFilter(activeFilters) else Color(0xFF546E7A)
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -220,6 +233,27 @@ fun LocationBottomSheet(
                 }
             }
 
+            // Show all tags below the name
+            if (location.tags.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    location.tags.forEach { tag ->
+                        Surface(
+                            shape = RoundedCornerShape(50),
+                            color = tag.color.copy(alpha = 0.12f)
+                        ) {
+                            Text(
+                                text = tag.displayName,
+                                fontSize = 11.sp,
+                                color = tag.color,
+                                fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                            )
+                        }
+                    }
+                }
+            }
+
             Spacer(modifier = Modifier.height(30.dp))
 
             Text(
@@ -249,7 +283,7 @@ fun ClusterBottomSheet(
 ) {
     // Group locations by tag, nulls get their own group at the end
     val grouped: Map<Tag?, List<MapLocation>> = cluster.locations
-        .groupBy { it.tag }
+        .groupBy { it.primaryTag }
         .toSortedMap(compareBy { it?.displayName ?: "zzz" })
 
     Column(
@@ -398,49 +432,42 @@ private fun ClusterLocationRow(
 fun CustomMapMarker(
     location: MapLocation,
     cameraPositionState: CameraPositionState,
-    isSelected: Boolean
+    isSelected: Boolean,
+    activeFilters: Set<Tag> = emptySet()
 ) {
     val zoom by remember { derivedStateOf { cameraPositionState.position.zoom } }
+    val color = if (isSelected) Color(0xFFE53935) else location.colorForFilter(activeFilters)
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.width(IntrinsicSize.Max)
     ) {
         Box(modifier = Modifier.size(36.dp), contentAlignment = Alignment.Center) {
-            CustomPin(
-                color = if (isSelected) Color(0xFFE53935) else location.color,
-                icon = location.icon
-            )
+            CustomPin(color = color, icon = location.icon)
         }
-
         if (zoom > 15f) {
             Spacer(Modifier.width(6.dp))
-            Text(
-                text = location.name,
-                color = if (isSelected) Color(0xFFE53935) else location.color,
-                fontWeight = FontWeight.Medium
-            )
+            Text(text = location.name, color = color, fontWeight = FontWeight.Medium)
         } else {
             Spacer(Modifier.width(0.dp))
         }
     }
 }
 
-/** Pin shown for a cluster of multiple locations. */
 @Composable
 fun ClusterMapMarker(
     cluster: LocationCluster,
     cameraPositionState: CameraPositionState,
-    isSelected: Boolean
+    isSelected: Boolean,
+    activeFilters: Set<Tag> = emptySet()
 ) {
     val zoom by remember { derivedStateOf { cameraPositionState.position.zoom } }
-    val pinColor = if (isSelected) Color(0xFFE53935) else cluster.color
+    val pinColor = if (isSelected) Color(0xFFE53935) else cluster.color(activeFilters)
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.width(IntrinsicSize.Max)
     ) {
-        // Cluster pin: slightly larger with a count badge
         Box(contentAlignment = Alignment.TopEnd) {
             Box(
                 modifier = Modifier
@@ -458,14 +485,9 @@ fun ClusterMapMarker(
                 )
             }
         }
-
         if (zoom > 15f) {
             Spacer(Modifier.width(6.dp))
-            Text(
-                text = "${cluster.locations.size} posts",
-                color = pinColor,
-                fontWeight = FontWeight.Medium
-            )
+            Text(text = "${cluster.locations.size} posts", color = pinColor, fontWeight = FontWeight.Medium)
         } else {
             Spacer(Modifier.width(0.dp))
         }

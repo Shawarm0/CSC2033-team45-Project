@@ -30,6 +30,7 @@ import kotlinx.coroutines.launch
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.DirectionsBike
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
@@ -66,7 +67,9 @@ fun DiscoverMap(
                     it.name.contains(text.trim(), ignoreCase = true)
                 }
                 activeFilters.isEmpty() -> locations
-                else -> locations.filter { it.tag != null && it.tag in activeFilters }
+                else -> locations.filter { location ->
+                    location.tags.any { it in activeFilters }
+                }
             }
         }
     }
@@ -263,7 +266,8 @@ fun DiscoverMap(
                                     tint = if (isSelected) Color.White else Color(0xFF141414),
                                     modifier = Modifier.size(16.dp)
                                 )
-                            }
+                            },
+                            selectedColor = tag.color
                         )
                     }
                 }
@@ -360,41 +364,37 @@ fun MapControlButton(
 
 val locations = listOf(
 
-    // --- BIKE RACK cluster (Quayside area, all ~100m apart, same tag → 1 pin) ---
+    // Quayside Bike Racks — type: BIKE_RACK, status varies
     MapLocation(
         name = "Quayside Bike Rack A",
         position = LatLng(54.9686, -1.6094),
-        color = Color(0xFF8E24AA),
-        tag = Tag.BIKE_RACK,
-        icon = Icons.Default.DirectionsBike,
+        tags = listOf(Tag.BIKE_RACK, Tag.APPROVED),
+        icon = Icons.AutoMirrored.Filled.DirectionsBike,
         description = "Bike rack near the Quayside restaurants, 12 spaces available.",
         imageRes = null
     ),
     MapLocation(
         name = "Quayside Bike Rack B",
         position = LatLng(54.9688, -1.6088),
-        color = Color(0xFF8E24AA),
-        tag = Tag.BIKE_RACK,
-        icon = Icons.Default.DirectionsBike,
-        description = "Bike rack outside the Pitcher & Piano, 8 spaces.",
+        tags = listOf(Tag.BIKE_RACK, Tag.AWAITING_APPROVAL),
+        icon = Icons.AutoMirrored.Filled.DirectionsBike,
+        description = "Bike rack outside the Pitcher & Piano, 8 spaces. Pending council sign-off.",
         imageRes = null
     ),
     MapLocation(
         name = "Quayside Bike Rack C",
         position = LatLng(54.9684, -1.6099),
-        color = Color(0xFF8E24AA),
-        tag = Tag.BIKE_RACK,
-        icon = Icons.Default.DirectionsBike,
-        description = "Covered bike rack near the law courts, 20 spaces.",
+        tags = listOf(Tag.BIKE_RACK, Tag.TEMPORARY),
+        icon = Icons.AutoMirrored.Filled.DirectionsBike,
+        description = "Temporary covered bike rack near the law courts, 20 spaces. Installed for summer.",
         imageRes = null
     ),
 
-    // --- ELECTRIC CHARGER cluster (Quayside area, same zone as bike racks → separate pin) ---
+    // Quayside EV Chargers — type: ELECTRIC_CHARGER, status varies
     MapLocation(
         name = "Quayside EV Charger 1",
         position = LatLng(54.9685, -1.6091),
-        color = Color(0xFF00897B),
-        tag = Tag.ELECTRIC_CHARGER,
+        tags = listOf(Tag.ELECTRIC_CHARGER, Tag.APPROVED),
         icon = Icons.Default.EvStation,
         description = "Fast EV charging point, 2 bays, 50kW.",
         imageRes = null
@@ -402,19 +402,17 @@ val locations = listOf(
     MapLocation(
         name = "Quayside EV Charger 2",
         position = LatLng(54.9683, -1.6096),
-        color = Color(0xFF00897B),
-        tag = Tag.ELECTRIC_CHARGER,
+        tags = listOf(Tag.ELECTRIC_CHARGER, Tag.AWAITING_APPROVAL),
         icon = Icons.Default.EvStation,
-        description = "Standard EV charging point, 4 bays, 22kW.",
+        description = "Proposed standard EV charging point, 4 bays, 22kW. Awaiting planning permission.",
         imageRes = null
     ),
 
-    // --- ISSUE cluster (city centre, all within ~150m → 1 pin) ---
+    // City centre issues
     MapLocation(
         name = "Pothole on Grey Street",
         position = LatLng(54.9748, -1.6140),
-        color = Color(0xFFE53935),
-        tag = Tag.ISSUE,
+        tags = listOf(Tag.ISSUE),
         icon = Icons.Default.Warning,
         description = "Large pothole causing hazard for cyclists near the Theatre Royal.",
         imageRes = null
@@ -422,39 +420,33 @@ val locations = listOf(
     MapLocation(
         name = "Broken Street Light",
         position = LatLng(54.9751, -1.6135),
-        color = Color(0xFFE53935),
-        tag = Tag.ISSUE,
+        tags = listOf(Tag.ISSUE, Tag.TEMPORARY),
         icon = Icons.Default.Warning,
-        description = "Street light out on Grey Street junction, reported twice already.",
+        description = "Street light out on Grey Street junction. Temporary fix in place, permanent repair pending.",
         imageRes = null
     ),
     MapLocation(
         name = "Fly Tipping",
         position = LatLng(54.9745, -1.6148),
-        color = Color(0xFFE53935),
-        tag = Tag.ISSUE,
+        tags = listOf(Tag.ISSUE),
         icon = Icons.Default.Warning,
         description = "Illegally dumped rubbish behind Grainger Market.",
         imageRes = null
     ),
 
-    // --- ISSUE far away (Leazes area, same tag but far from city centre cluster → own pin) ---
+    // Leazes area
     MapLocation(
         name = "Broken Fence",
         position = LatLng(54.9791, -1.6220),
-        color = Color(0xFFE53935),
-        tag = Tag.ISSUE,
+        tags = listOf(Tag.ISSUE, Tag.AWAITING_APPROVAL),
         icon = Icons.Default.Warning,
-        description = "Fence along Leazes Park perimeter is broken, creating an unsafe gap.",
+        description = "Fence along Leazes Park perimeter is broken. Repair request submitted.",
         imageRes = null
     ),
-
-    // --- GREEN SPACE cluster (Leazes area) ---
     MapLocation(
         name = "Leazes Park",
         position = LatLng(54.9789, -1.6218),
-        color = Color(0xFF43A047),
-        tag = Tag.GREEN_SPACE,
+        tags = listOf(Tag.GREEN_SPACE, Tag.APPROVED),
         icon = Icons.Default.Park,
         description = "A beautiful Victorian park close to the city centre, perfect for a relaxing walk.",
         imageRes = null
@@ -462,61 +454,61 @@ val locations = listOf(
     MapLocation(
         name = "Leazes Park Pond",
         position = LatLng(54.9793, -1.6211),
-        color = Color(0xFF43A047),
-        tag = Tag.GREEN_SPACE,
+        tags = listOf(Tag.GREEN_SPACE, Tag.AWAITING_APPROVAL),
         icon = Icons.Default.Park,
-        description = "A tranquil pond in the centre of Leazes Park, home to ducks and wildlife.",
+        description = "Proposed wildlife conservation area around the pond. Awaiting council approval.",
         imageRes = null
     ),
 
-    // --- APPROVED singleton (no nearby approved pins → stands alone) ---
+    // St James' area
     MapLocation(
         name = "New Cycle Lane",
         position = LatLng(54.9756, -1.6218),
-        color = Color(0xFF388E3C),
-        tag = Tag.APPROVED,
-        icon = Icons.Default.DirectionsBike,
+        tags = listOf(Tag.BIKE_RACK, Tag.APPROVED),
+        icon = Icons.AutoMirrored.Filled.DirectionsBike,
         description = "Approved protected cycle lane running alongside St James' Park.",
         imageRes = null
     ),
+    MapLocation(
+        name = "St James' EV Bays",
+        position = LatLng(54.9758, -1.6214),
+        tags = listOf(Tag.ELECTRIC_CHARGER, Tag.AWAITING_APPROVAL),
+        icon = Icons.Default.EvStation,
+        description = "Proposed EV charging bays in the St James' car park. Community consultation ongoing.",
+        imageRes = null
+    ),
 
-    // --- AWAITING_APPROVAL cluster (Central Station area) ---
+    // Central Station area
     MapLocation(
         name = "Central Station EV Hub",
         position = LatLng(54.9684, -1.6178),
-        color = Color(0xFF1976D2),
-        tag = Tag.AWAITING_APPROVAL,
+        tags = listOf(Tag.ELECTRIC_CHARGER, Tag.APPROVED),
         icon = Icons.Default.EvStation,
-        description = "Proposed EV charging hub outside Central Station, 10 bays.",
+        description = "Approved EV charging hub outside Central Station, 10 bays.",
         imageRes = null
     ),
     MapLocation(
         name = "Central Station Bike Shelter",
         position = LatLng(54.9687, -1.6171),
-        color = Color(0xFF1976D2),
-        tag = Tag.AWAITING_APPROVAL,
-        icon = Icons.Default.DirectionsBike,
+        tags = listOf(Tag.BIKE_RACK, Tag.AWAITING_APPROVAL),
+        icon = Icons.AutoMirrored.Filled.DirectionsBike,
         description = "Proposed covered bike shelter for 50 bikes outside the station.",
         imageRes = null
     ),
-
-    // --- TEMPORARY singleton ---
     MapLocation(
-        name = "Roadworks Closure",
-        position = LatLng(54.9726, -1.6154),
-        color = Color(0xFFF57C00),
-        tag = Tag.TEMPORARY,
+        name = "Station Road Roadworks",
+        position = LatLng(54.9682, -1.6183),
+        tags = listOf(Tag.ISSUE, Tag.TEMPORARY),
         icon = Icons.Default.Construction,
-        description = "Temporary road closure near the Cathedral for utility works. Expected until end of month.",
+        description = "Temporary road closure outside Central Station for utility works. Expected until end of month.",
         imageRes = null
     ),
 
-    // --- null tag (never clusters with anything) ---
+    // Untagged landmarks — no status, just points of interest
     MapLocation(
         name = "Tyne Bridge",
         position = LatLng(54.9679, -1.6051),
-        color = Color(0xFF00897B),
-        tag = null,
+        tags = emptyList(),
         icon = Icons.Default.Attractions,
         description = "The iconic green arch bridge spanning the River Tyne.",
         imageRes = null
@@ -524,8 +516,7 @@ val locations = listOf(
     MapLocation(
         name = "Grey's Monument",
         position = LatLng(54.9751, -1.6131),
-        color = Color(0xFF1976D2),
-        tag = null,
+        tags = emptyList(),
         icon = Icons.Default.Place,
         description = "A tall column commemorating Earl Grey, the former Prime Minister.",
         imageRes = null

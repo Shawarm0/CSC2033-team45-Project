@@ -28,7 +28,8 @@ fun FilterPill(
     text: String = "",
     isSelected: Boolean,
     onClick: () -> Unit,
-    icon: @Composable () -> Unit
+    icon: @Composable () -> Unit,
+    selectedColor: Color = Primary
 ) {
     Surface(
         modifier = Modifier
@@ -36,7 +37,7 @@ fun FilterPill(
             .wrapContentWidth(),
         shape = RoundedCornerShape(50),
         shadowElevation = if (isSelected) 2.dp else 6.dp,
-        color = if (isSelected) Primary else BottomBarColor
+        color = if (isSelected) selectedColor else BottomBarColor
     ) {
         Row(
             modifier = Modifier
