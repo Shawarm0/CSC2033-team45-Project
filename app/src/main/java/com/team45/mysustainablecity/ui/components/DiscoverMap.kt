@@ -216,8 +216,7 @@ fun DiscoverMap(
                             selectedCluster = cluster
                             coroutineScope.launch {
                                 cameraPositionState.animate(
-                                    CameraUpdateFactory.newLatLngZoom(cluster.centroid, 16f)
-                                )
+                                    CameraUpdateFactory.newLatLngZoom(cluster.centroid, cameraPositionState.position. zoom)                                )
                             }
                             true
                         }
