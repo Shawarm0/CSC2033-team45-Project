@@ -95,10 +95,24 @@ fun DiscoverMap(
     val clusters by remember(zoom, visibleLocations) {
         derivedStateOf {
             val thresholdMeters = when {
+                zoom >= 19f -> 10.0
+                zoom >= 18f -> 20.0
+                zoom >= 17f -> 35.0
+                zoom >= 16.5f -> 55.0
                 zoom >= 16f -> 80.0
+                zoom >= 15.5f -> 110.0
                 zoom >= 15f -> 150.0
-                zoom >= 14f -> 250.0
-                else        -> 400.0
+                zoom >= 14.5f -> 200.0
+                zoom >= 14f -> 260.0
+                zoom >= 13.5f -> 340.0
+                zoom >= 13f -> 430.0
+                zoom >= 12.5f -> 550.0
+                zoom >= 12f -> 700.0
+                zoom >= 11.5f -> 900.0
+                zoom >= 11f -> 1150.0
+                zoom >= 10.5f -> 1500.0
+                zoom >= 10f -> 2000.0
+                else -> 3000.0
             }
             clusterLocations(visibleLocations, thresholdMeters)
         }
@@ -150,7 +164,7 @@ fun DiscoverMap(
             ),
             onMapClick = { selectedCluster = null }
         ) {
-            if (zoom > 14f) {
+            if (zoom > 11f) {
                 clusters.forEach { cluster ->
                     val isSelected = selectedCluster == cluster
                     MarkerComposable(

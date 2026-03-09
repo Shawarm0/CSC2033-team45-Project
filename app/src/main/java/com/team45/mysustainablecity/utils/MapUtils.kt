@@ -53,23 +53,23 @@ enum class Tag {
     APPROVED;
 
     val displayName: String get() = when (this) {
-        TEMPORARY -> "Temporary"
+        TEMPORARY         -> "Temporary"
         AWAITING_APPROVAL -> "Awaiting Approval"
-        APPROVED -> "Approved"
-        ELECTRIC_CHARGER -> "Electric Charger"
-        BIKE_RACK -> "Bike Rack"
-        GREEN_SPACE -> "Green Space"
-        ISSUE -> "Issue"
+        APPROVED          -> "Approved"
+        ELECTRIC_CHARGER  -> "Electric Charger"
+        BIKE_RACK         -> "Bike Rack"
+        GREEN_SPACE       -> "Green Space"
+        ISSUE             -> "Issue"
     }
 
     val color: Color get() = when (this) {
-        TEMPORARY -> Color(0xFFF57C00)
+        TEMPORARY         -> Color(0xFFF57C00)
         AWAITING_APPROVAL -> Color(0xFF9C27B0)
-        APPROVED -> Color(0xFF388E3C)
-        ELECTRIC_CHARGER -> Color(0xFF1976D2)
-        BIKE_RACK -> Color(0xFF00897B)
-        GREEN_SPACE -> Color(0xFF1E8449)
-        ISSUE -> Color(0xFFE53935)
+        APPROVED          -> Color(0xFF388E3C)
+        ELECTRIC_CHARGER  -> Color(0xFF1976D2)
+        BIKE_RACK         -> Color(0xFF00897B)
+        GREEN_SPACE       -> Color(0xFF1E8449)
+        ISSUE             -> Color(0xFFE53935)
     }
 
     val icon: ImageVector get() = when (this) {
