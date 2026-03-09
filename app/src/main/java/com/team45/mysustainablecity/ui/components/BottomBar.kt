@@ -66,17 +66,14 @@ fun BottomBar(
         modifier = Modifier
             .fillMaxWidth()
             .wrapContentHeight()
-            .background(
-                color = BottomBarColor,
-                shape = RoundedCornerShape(15.dp)
-            )
-            .navigationBarsPadding(),  // Add this,
+            .background(color = BottomBarColor) // No shape here
+            .navigationBarsPadding(),
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically
     ) {
         bottomBarScreens.forEach { screen ->
             BottomBarItem(
-                modifier = Modifier.padding(top = 20.dp),
+                modifier = Modifier.padding(top = 10.dp, bottom = 10.dp),
                 icon = if (selectedScreen == screen.route) screen.filledIcon else screen.outlinedIcon,
                 text = screen.route.replaceFirstChar { it.uppercaseChar() }.replace("_", " "),
                 isSelected = selectedScreen == screen.route,
