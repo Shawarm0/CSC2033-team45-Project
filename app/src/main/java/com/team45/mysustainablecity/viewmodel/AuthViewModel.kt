@@ -159,7 +159,7 @@ class AuthViewModel(
             try {
                 val user = userRep.getSelf()
                 _authState.value = user
-                _isAuthenticated.value = client.auth.currentSessionOrNull()?.user?.id != null
+                _isAuthenticated.value = user!= null
                 Log.d("AuthViewModel", "successfully loaded self $user")
 
             } catch (e: Exception) {
