@@ -345,7 +345,7 @@ fun DiscoverMap(
                                 CameraUpdateFactory.newCameraPosition(
                                     CameraPosition.Builder()
                                         .target(LatLng(it.latitude, it.longitude))
-                                        .zoom(15f)
+                                        .zoom(17f)
                                         .bearing(0f) // reset to north
                                         .tilt(0f)
                                         .build()
@@ -360,7 +360,7 @@ fun DiscoverMap(
                         CameraUpdateFactory.newCameraPosition(
                             CameraPosition.Builder()
                                 .target(newcastle)
-                                .zoom(16f)
+                                .zoom(17f)
                                 .bearing(0f)
                                 .tilt(0f)
                                 .build()

@@ -26,6 +26,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.NavHostController
@@ -161,10 +162,13 @@ fun AppNavigation(
     val isAuthenticated by authViewModel.isAuthenticated.collectAsState()
     val isSessionReady by authViewModel.isSessionReady.collectAsState()
 
-    // Don't render anything until session is resolved — splash screen holds during this
     if (!isSessionReady) return
 
-    val startDestination = if (isAuthenticated) Screen.Home.route else Screen.Login.route
+    // Remember the start destination so NavHost doesn't get recreated on auth change
+    val startDestination = remember {
+        if (isAuthenticated) Screen.Home.route else Screen.Login.route
+    }
+
 
     NavHost(
         navController = rootNavController,
@@ -239,7 +243,7 @@ fun AppNavigation(
     ) {
         composable(Screen.Login.route) { LoginScreen(rootNavController, authViewModel) }
         composable(Screen.SignUp.route) { SignUpScreen(rootNavController, authViewModel) }
-        composable(Screen.Home.route) { MainScaffold(authViewModel) }
+        composable(Screen.Home.route) { MainScaffold(authViewModel, rootNavController) }
     }
 
 }
@@ -250,7 +254,8 @@ fun AppNavigation(
 
 @Composable
 fun MainScaffold(
-    authViewModel: AuthViewModel
+    authViewModel: AuthViewModel,
+    rootNavController: NavHostController
 ) {
     val innerNavController = rememberNavController()
     val currentBackStackEntry by innerNavController.currentBackStackEntryAsState()
@@ -320,7 +325,8 @@ fun MainScaffold(
             composable(Screen.Discover.route) {
                 DiscoverScreen(
                     authViewModel,
-                    padding
+                    padding,
+                    rootNavController
                 )
             }
             composable(
