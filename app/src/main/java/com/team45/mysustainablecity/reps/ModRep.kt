@@ -9,7 +9,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 @OptIn(ExperimentalUuidApi::class)
 class ModRep {
@@ -20,7 +19,7 @@ class ModRep {
     val moderationHistory: StateFlow<List<Moderation>> = _moderationHistory
 
 
-    suspend fun loadModerationHistoryFromModUser(modId: Int) {
+    suspend fun loadModerationHistoryFromModUser(modId: String) {
         val history = client
             .from("moderation")
             .select {
@@ -34,7 +33,7 @@ class ModRep {
     }
 
 
-    suspend fun getModerationHistoryFromPost(postId: Int): StateFlow<List<Moderation>>{
+    suspend fun getModerationHistoryFromPost(postId: String): StateFlow<List<Moderation>>{
         val result = client
             .from("moderation")
             .select {

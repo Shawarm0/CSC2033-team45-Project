@@ -165,7 +165,7 @@ class ModViewModel(
     /**
      * Load moderation history for moderator
      */
-    fun loadModerationHistoryFromModUser(modId: Int) {
+    fun loadModerationHistoryFromModUser(modId: String) {
         viewModelScope.launch {
 
             _isLoading.value = true
@@ -192,7 +192,7 @@ class ModViewModel(
     /**
      * Load moderation history for post
      */
-    fun loadModerationHistoryFromPost(postId: Int) {
+    fun loadModerationHistoryFromPost(postId: String) {
         viewModelScope.launch {
 
             _isLoading.value = true
