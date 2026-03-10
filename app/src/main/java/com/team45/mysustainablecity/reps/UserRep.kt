@@ -5,8 +5,6 @@ import com.team45.mysustainablecity.data.classes.Alert
 import com.team45.mysustainablecity.data.classes.User
 import com.team45.mysustainablecity.data.remote.SupabaseClientProvider
 import io.github.jan.supabase.auth.auth
-import io.github.jan.supabase.auth.exception.AuthRestException
-import io.github.jan.supabase.auth.exception.AuthWeakPasswordException
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.auth.status.SessionStatus
 import io.github.jan.supabase.postgrest.from
@@ -163,7 +161,7 @@ class UserRep {
         }
 
         try {
-            client.from("alerts").update(mapOf("is_read" to true)) {    // Set is_read field to true, no need to check if its false before
+            client.from("alerts").update(mapOf("is_read" to true)) {    // Set is_read field to true, no need to check if it's false before
                 filter { eq("alert_id", alertId) }
             }
             Log.d("UserRep", "Successfully marked alert: $alertId as read")

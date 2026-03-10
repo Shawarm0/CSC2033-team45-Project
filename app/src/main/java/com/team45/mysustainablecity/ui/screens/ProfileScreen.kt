@@ -13,10 +13,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBox
 import androidx.compose.material3.HorizontalDivider
@@ -48,7 +46,7 @@ data class ProfileMenuItem(
 @Composable
 fun ProfileScreen(
     navController: NavController,
-    username: String = "Username"
+    username: String = "Username",
 ) {
     val menuItems = listOf(
         ProfileMenuItem("Account", Icons.Default.AccountBox) {},
@@ -69,17 +67,9 @@ fun ProfileScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
-                .verticalScroll(rememberScrollState()),
+                .padding(innerPadding),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Map part (green placeholder)
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(80.dp)
-                    .background(Color(0xFFDDEEDD))
-            )
 
             Spacer(modifier = Modifier.height(16.dp))
 

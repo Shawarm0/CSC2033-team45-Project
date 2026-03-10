@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -63,16 +65,15 @@ fun BottomBar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(90.dp)
-            .background(
-                color = BottomBarColor,
-                shape = RoundedCornerShape(15.dp)
-            ),
+            .wrapContentHeight()
+            .background(color = BottomBarColor) // No shape here
+            .navigationBarsPadding(),
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically
     ) {
         bottomBarScreens.forEach { screen ->
             BottomBarItem(
+                modifier = Modifier.padding(top = 10.dp, bottom = 10.dp),
                 icon = if (selectedScreen == screen.route) screen.filledIcon else screen.outlinedIcon,
                 text = screen.route.replaceFirstChar { it.uppercaseChar() }.replace("_", " "),
                 isSelected = selectedScreen == screen.route,
@@ -105,6 +106,7 @@ fun BottomBar(
  */
 @Composable
 fun BottomBarItem(
+    modifier: Modifier = Modifier,
     icon: ImageVector?,
     text: String,
     isSelected: Boolean,
@@ -129,7 +131,7 @@ fun BottomBarItem(
     )
 
     Box(
-        modifier = Modifier.clickable(
+        modifier = modifier.clickable(
             interactionSource = remember { MutableInteractionSource() },
             indication = null,
             onClick = onClick
