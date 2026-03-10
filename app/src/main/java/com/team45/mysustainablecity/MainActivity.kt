@@ -182,7 +182,8 @@ fun AppNavigation(
                 // Logout: Main → Login
                 Screen.Discover.route,
                 Screen.Home.route,
-                Screen.Alerts.route -> {
+                Screen.Alerts.route,
+                Screen.Profile.route -> {
                     if (to == Screen.Login.route) {
                         fadeIn(
                             animationSpec = tween(1000)
@@ -319,7 +320,9 @@ fun MainScaffold(
             composable(Screen.Home.route) {
                 HomeScreen(
                     innerNavController,
-                    padding
+                    rootNavController,
+                    padding,
+                    authViewModel
                 )
             }
             composable(Screen.Discover.route) {

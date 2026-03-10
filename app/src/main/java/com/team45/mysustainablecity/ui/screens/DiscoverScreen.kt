@@ -21,24 +21,5 @@ fun DiscoverScreen(
     paddingValues: PaddingValues,
     navController: NavHostController
 ) {
-    val isLoggedOut by authViewModel.isLoggedOut.collectAsState()
 
-    LaunchedEffect(isLoggedOut) {
-        if (isLoggedOut) {
-            authViewModel.clearLoggedOut()
-            navController.navigate(Screen.Login.route) {
-                popUpTo(0) { inclusive = true }
-            }
-        }
-    }
-
-    Button(
-        modifier = Modifier.padding(paddingValues),
-        onClick = {
-            authViewModel.logout()
-            Log.d("DiscoverScreen", "Logout request sent\n\n")
-        }
-    ) {
-        Text("LogOut")
-    }
 }
