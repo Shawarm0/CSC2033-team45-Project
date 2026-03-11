@@ -12,16 +12,21 @@ import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 
+/**
+ * Unit tests for [ModRep].
+ * * Note: Supabase network calls are intercepted and mocked using Ktor's [MockEngine]
+ * to avoid inline function crashes associated with standard mocking libraries.
+ */
 class ModRepTest {
 
     private lateinit var modRep: ModRep
 
     @Test
     fun `getModerationHistoryFromModUser returns a list of Moderation items`() = runTest {
-        // 1. ARRANGE
+        // Arrange
         val testModId = "mod_123"
 
-        // Write the raw JSON exactly as Supabase would send it back over the internet
+        // Simulating a successful response with a single approved post
         val fakeJsonResponse = """
             [
                 {
@@ -52,10 +57,10 @@ class ModRepTest {
 
         modRep = ModRep(client = fakeClient)
 
-        // 2. ACT
+        // Act
         modRep.loadModerationHistoryFromModUser(testModId)
 
-        // 3. ASSERT
+        // Assert
         val actualResult = modRep.moderationHistory.value
 
         assertEquals(1, actualResult.size)
