@@ -1,51 +1,66 @@
 package com.team45.mysustainablecity.tests.reps
 
 import com.team45.mysustainablecity.reps.ModRep
-import org.junit.Before
+import io.github.jan.supabase.createSupabaseClient
+import io.github.jan.supabase.postgrest.Postgrest
+import io.ktor.client.engine.mock.MockEngine
+import io.ktor.client.engine.mock.respond
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.headersOf
+import junit.framework.TestCase.assertEquals
+import kotlinx.coroutines.test.runTest
 import org.junit.Test
 
 class ModRepTest {
 
     private lateinit var modRep: ModRep
 
-    @Before
-    fun setup() {
-        // Initializes a fresh ModRep before every test runs
-        modRep = ModRep()
-    }
-
     @Test
-    fun `makeModerator updates user role successfully`() {
-        // TODO: Implement test
-    }
+    fun `getModerationHistoryFromModUser returns a list of Moderation items`() = runTest {
+        // 1. ARRANGE
+        val testModId = "mod_123"
 
-    @Test
-    fun `deactivateModUser removes moderator role successfully`() {
-        // TODO: Implement test
-    }
+        // Write the raw JSON exactly as Supabase would send it back over the internet
+        val fakeJsonResponse = """
+            [
+                {
+                    "post_id": "post_1",
+                    "moderator_id": "$testModId",
+                    "action": "APPROVED",
+                    "reason": "Post follows all guidelines",
+                    "action_at": "2023-10-27T10:00:00Z"
+                }
+            ]
+        """.trimIndent()
 
-    @Test
-    fun `getModerationHistoryFromModUser returns a list of Moderation items`() {
-        // TODO: Implement test
-    }
+        val mockEngine = MockEngine { _ ->
+            respond(
+                content = fakeJsonResponse,
+                status = HttpStatusCode.OK,
+                headers = headersOf(HttpHeaders.ContentType, "application/json")
+            )
+        }
 
-    @Test
-    fun `getModerationHistoryFromPost returns a list of Moderation items`() {
-        // TODO: Implement test
-    }
+        val fakeClient = createSupabaseClient(
+            supabaseUrl = "https://dummy.supabase.co",
+            supabaseKey = "dummy-key"
+        ) {
+            install(Postgrest)
+            httpEngine = mockEngine
+        }
 
-    @Test
-    fun `rejectPost updates post status to rejected`() {
-        // TODO: Implement test
-    }
+        modRep = ModRep(client = fakeClient)
 
-    @Test
-    fun `approvePost updates post status to approved`() {
-        // TODO: Implement test
-    }
+        // 2. ACT
+        modRep.loadModerationHistoryFromModUser(testModId)
 
-    @Test
-    fun `getUnapprovedPosts returns a list of pending Posts`() {
-        // TODO: Implement test
+        // 3. ASSERT
+        val actualResult = modRep.moderationHistory.value
+
+        assertEquals(1, actualResult.size)
+        assertEquals("post_1", actualResult[0].postId)
+        assertEquals("APPROVED", actualResult[0].action)
+        assertEquals(testModId, actualResult[0].moderatorId)
     }
 }

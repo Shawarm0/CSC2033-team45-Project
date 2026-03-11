@@ -3,6 +3,7 @@ package com.team45.mysustainablecity.reps
 import com.team45.mysustainablecity.data.classes.Moderation
 import com.team45.mysustainablecity.data.classes.Post
 import com.team45.mysustainablecity.data.remote.SupabaseClientProvider
+import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -11,8 +12,9 @@ import kotlinx.serialization.json.put
 import kotlin.uuid.ExperimentalUuidApi
 
 @OptIn(ExperimentalUuidApi::class)
-class ModRep {
-    private val client = SupabaseClientProvider.client
+class ModRep(
+    private val client: SupabaseClient = SupabaseClientProvider.client
+){
     private val _unapprovedPosts = MutableStateFlow<List<Post>>(emptyList())
     val unapprovedPosts: StateFlow<List<Post>> = _unapprovedPosts
     private val _moderationHistory = MutableStateFlow<List<Moderation>>(emptyList())
