@@ -22,7 +22,7 @@ class ModRepTest {
     private lateinit var modRep: ModRep
 
     @Test
-    fun `getModerationHistoryFromModUser returns a list of Moderation items`() = runTest {
+    fun `loadModerationHistoryFromModUser returns a list of Moderation items`() = runTest {
         // Arrange
         val testModId = "mod_123"
 
