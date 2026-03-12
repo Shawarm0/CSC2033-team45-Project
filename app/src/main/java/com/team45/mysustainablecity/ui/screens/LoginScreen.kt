@@ -22,6 +22,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,8 +39,10 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.team45.mysustainablecity.Screen
 import com.team45.mysustainablecity.ui.components.AppButton
 import com.team45.mysustainablecity.ui.components.CustomTextField
@@ -60,6 +63,20 @@ fun LoginScreen(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     val errorState by authViewModel.errorState.collectAsState()
+    val isAuthenticated by authViewModel.isAuthenticated.collectAsState()
+    val isLoading by authViewModel.isLoading.collectAsState()
+
+
+
+    // When auth succeeds, move to username step AND clear operationSuccess
+    LaunchedEffect(isAuthenticated) {
+        if (isAuthenticated && !isLoading) {
+            navController.navigate(Screen.Home.route) {
+                popUpTo(Screen.Login.route) { inclusive = true }
+            }
+        }
+    }
+
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -228,3 +245,13 @@ fun LoginScreen(
         }
     }
 }
+
+//@Composable
+//@Preview
+//fun LoginPreview() {
+//    val rootNavController = rememberNavController()
+//
+//    LoginScreen(
+//        rootNavController
+//    )
+//}

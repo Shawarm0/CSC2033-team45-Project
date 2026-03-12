@@ -51,6 +51,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
@@ -77,6 +78,7 @@ import com.team45.mysustainablecity.utils.LocationCluster
 import com.team45.mysustainablecity.utils.MapLocation
 import com.team45.mysustainablecity.utils.Tag
 import com.team45.mysustainablecity.utils.clusterLocations
+import com.team45.mysustainablecity.viewmodel.AuthViewModel
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class)
@@ -84,7 +86,9 @@ import kotlinx.coroutines.launch
 @Composable
 fun DiscoverMap(
     navController: NavController,
-    paddingValues: PaddingValues
+    rootNavController: NavHostController,
+    paddingValues: PaddingValues,
+    authViewModel: AuthViewModel
 ) {
 
     var text by remember { mutableStateOf("") }
@@ -110,7 +114,7 @@ fun DiscoverMap(
                 }
                 activeFilters.isEmpty() -> locations
                 else -> locations.filter { location ->
-                    location.tags.any { it in activeFilters }
+                    activeFilters.all { it in location.tags }
                 }
             }
         }
@@ -345,7 +349,7 @@ fun DiscoverMap(
                                 CameraUpdateFactory.newCameraPosition(
                                     CameraPosition.Builder()
                                         .target(LatLng(it.latitude, it.longitude))
-                                        .zoom(15f)
+                                        .zoom(17f)
                                         .bearing(0f) // reset to north
                                         .tilt(0f)
                                         .build()
@@ -360,7 +364,7 @@ fun DiscoverMap(
                         CameraUpdateFactory.newCameraPosition(
                             CameraPosition.Builder()
                                 .target(newcastle)
-                                .zoom(16f)
+                                .zoom(17f)
                                 .bearing(0f)
                                 .tilt(0f)
                                 .build()
@@ -431,7 +435,13 @@ fun DiscoverMap(
             contentWindowInsets = { WindowInsets.statusBars },
             modifier = Modifier.fillMaxHeight()
         ) {
-            ProfileScreen(navController)
+            ProfileScreen(
+                rootNavController,
+                authViewModel = authViewModel,
+                onLogOut = {
+                    showProfile.value = false
+                }
+            )
         }
     }
 }

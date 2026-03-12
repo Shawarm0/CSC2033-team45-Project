@@ -26,6 +26,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.NavHostController
@@ -35,6 +36,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.team45.mysustainablecity.ui.components.BottomBar
+import com.team45.mysustainablecity.ui.screens.AlertsScreen
 import com.team45.mysustainablecity.ui.screens.DiscoverScreen
 import com.team45.mysustainablecity.ui.screens.HomeScreen
 import com.team45.mysustainablecity.ui.screens.LoginScreen
@@ -44,6 +46,7 @@ import com.team45.mysustainablecity.ui.theme.Background
 import com.team45.mysustainablecity.ui.theme.MySustainableCityTheme
 import com.team45.mysustainablecity.utils.AppContainer
 import com.team45.mysustainablecity.viewmodel.AuthViewModel
+import kotlinx.coroutines.runBlocking
 
 /**
  * The main entry point of the app
@@ -57,8 +60,10 @@ class MainActivity : ComponentActivity() {
         val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
 
-        splashScreen.setKeepOnScreenCondition {
-            !authViewModel.isSessionReady.value
+        runBlocking {
+            splashScreen.setKeepOnScreenCondition {
+                !authViewModel.isSessionReady.value
+            }
         }
 
         enableEdgeToEdge()
@@ -161,10 +166,13 @@ fun AppNavigation(
     val isAuthenticated by authViewModel.isAuthenticated.collectAsState()
     val isSessionReady by authViewModel.isSessionReady.collectAsState()
 
-    // Don't render anything until session is resolved — splash screen holds during this
     if (!isSessionReady) return
 
-    val startDestination = if (isAuthenticated) Screen.Home.route else Screen.Login.route
+    // Remember the start destination so NavHost doesn't get recreated on auth change
+    val startDestination = remember {
+        if (isAuthenticated) Screen.Home.route else Screen.Login.route
+    }
+
 
     NavHost(
         navController = rootNavController,
@@ -178,7 +186,8 @@ fun AppNavigation(
                 // Logout: Main → Login
                 Screen.Discover.route,
                 Screen.Home.route,
-                Screen.Alerts.route -> {
+                Screen.Alerts.route,
+                Screen.Profile.route -> {
                     if (to == Screen.Login.route) {
                         fadeIn(
                             animationSpec = tween(1000)
@@ -239,7 +248,7 @@ fun AppNavigation(
     ) {
         composable(Screen.Login.route) { LoginScreen(rootNavController, authViewModel) }
         composable(Screen.SignUp.route) { SignUpScreen(rootNavController, authViewModel) }
-        composable(Screen.Home.route) { MainScaffold(authViewModel) }
+        composable(Screen.Home.route) { MainScaffold(authViewModel, rootNavController) }
     }
 
 }
@@ -250,7 +259,8 @@ fun AppNavigation(
 
 @Composable
 fun MainScaffold(
-    authViewModel: AuthViewModel
+    authViewModel: AuthViewModel,
+    rootNavController: NavHostController
 ) {
     val innerNavController = rememberNavController()
     val currentBackStackEntry by innerNavController.currentBackStackEntryAsState()
@@ -314,13 +324,16 @@ fun MainScaffold(
             composable(Screen.Home.route) {
                 HomeScreen(
                     innerNavController,
-                    padding
+                    rootNavController,
+                    padding,
+                    authViewModel
                 )
             }
             composable(Screen.Discover.route) {
                 DiscoverScreen(
                     authViewModel,
-                    padding
+                    padding,
+                    innerNavController
                 )
             }
             composable(
@@ -331,7 +344,7 @@ fun MainScaffold(
                 PostScreen(authViewModel, innerNavController, locationName, padding)
             }
             composable(Screen.Alerts.route) {
-                //AlertScreen(innerNavController)
+                AlertsScreen(innerNavController)
             }
         }
     }
