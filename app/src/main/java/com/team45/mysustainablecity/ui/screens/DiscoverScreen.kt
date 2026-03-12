@@ -1,9 +1,11 @@
 package com.team45.mysustainablecity.ui.screens
 
+import android.annotation.SuppressLint
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.navigation.compose.rememberNavController
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -29,6 +31,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.compose.rememberNavController
+import com.team45.mysustainablecity.viewmodel.AuthViewModel
 
 // Colours
 val DarkBackground = Color(0xFF1C1C1C)
@@ -50,7 +53,7 @@ data class DiscoverPost(
 
 // Main screen
 @Composable
-fun DiscoverScreen(navController: NavController) {
+fun DiscoverScreen(authViewModel: AuthViewModel, padding: PaddingValues, navController: NavController) {
 
     val filterChips = listOf("All", "Parks", "Electric Chargers", "Issues", "Filter 1", "Filter 2")
     var selectedFilter by remember { mutableStateOf("All") }
@@ -299,8 +302,9 @@ fun PostCard(post: DiscoverPost) {
     }
 }
 
+@SuppressLint("ViewModelConstructorInComposable")
 @Composable
 @Preview
 fun DiscoverPreview() {
-    DiscoverScreen(navController = rememberNavController())
+    Text("Discover Screen Preview")
 }
