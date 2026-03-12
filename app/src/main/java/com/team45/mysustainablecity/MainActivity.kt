@@ -45,6 +45,7 @@ import com.team45.mysustainablecity.ui.theme.Background
 import com.team45.mysustainablecity.ui.theme.MySustainableCityTheme
 import com.team45.mysustainablecity.utils.AppContainer
 import com.team45.mysustainablecity.viewmodel.AuthViewModel
+import kotlinx.coroutines.runBlocking
 
 /**
  * The main entry point of the app
@@ -58,8 +59,10 @@ class MainActivity : ComponentActivity() {
         val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
 
-        splashScreen.setKeepOnScreenCondition {
-            !authViewModel.isSessionReady.value
+        runBlocking {
+            splashScreen.setKeepOnScreenCondition {
+                !authViewModel.isSessionReady.value
+            }
         }
 
         enableEdgeToEdge()
