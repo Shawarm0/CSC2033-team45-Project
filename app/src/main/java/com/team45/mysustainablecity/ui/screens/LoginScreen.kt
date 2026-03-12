@@ -22,6 +22,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -60,6 +61,18 @@ fun LoginScreen(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     val errorState by authViewModel.errorState.collectAsState()
+    val isAuthenticated by authViewModel.isAuthenticated.collectAsState()
+
+
+    // When auth succeeds, move to username step AND clear operationSuccess
+    LaunchedEffect(isAuthenticated) {
+        if (isAuthenticated) {
+            navController.navigate(Screen.Home.route) {
+                popUpTo(Screen.Login.route) { inclusive = true }
+            }
+        }
+    }
+
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),

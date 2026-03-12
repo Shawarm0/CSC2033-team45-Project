@@ -86,6 +86,28 @@ class UserRep {
             .decodeSingleOrNull<User>()
     }
 
+
+    suspend fun setUsername(username: String): Boolean {
+        val userId = client.auth.currentUserOrNull()?.id ?: run {
+            Log.e("UserRep", "setUsername: no authenticated user")
+            return false
+        }
+        return try {
+            client.from("users").update(mapOf("username" to username)) {
+                filter { eq("user_id", userId) }
+            }
+            Log.d("UserRep", "Successfully set username for $userId")
+            true
+        } catch (e: Exception) {
+            Log.e("UserRep", "Failed to set username: ${e.message}")
+            // Rethrow with a clean message so the ViewModel can surface it
+            if (e.message?.contains("users_username_key") == true) {
+                throw Exception("Username already taken")
+            }
+            throw e
+        }
+    }
+
     /**
      * Update a user in Supabase
      */
