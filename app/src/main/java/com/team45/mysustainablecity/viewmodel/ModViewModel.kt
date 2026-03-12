@@ -100,7 +100,7 @@ class ModViewModel(
             try {
 
                 val posts = modRep.getUnapprovedPosts()
-                Log.e("ModViewModel", "loadedUnapprovedPosts")
+                Log.d("ModViewModel", "loadedUnapprovedPosts")
 
             } catch (e: Exception) {
 
@@ -173,7 +173,7 @@ class ModViewModel(
             try {
 
                 val mods = modRep.loadModerationHistoryFromModUser(modId)
-                Log.e("ModViewModel", "loadedModHistoryByUserId:")
+                Log.d("ModViewModel", "loadedModHistoryByUserId:")
 
 
             } catch (e: Exception) {
@@ -200,7 +200,7 @@ class ModViewModel(
             try {
 
                 val mods = modRep.getModerationHistoryFromPost(postId)
-                Log.e("ModViewModel", "loadedModHistoryByPostId:")
+                Log.d("ModViewModel", "loadedModHistoryByPostId:")
 
 
             } catch (e: Exception) {

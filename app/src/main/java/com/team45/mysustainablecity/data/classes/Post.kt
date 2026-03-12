@@ -25,7 +25,4 @@ data class Post(
 
     @SerialName("updated_at")
     val updatedAt: Instant? = null,
-
-    @SerialName("is_approved")
-    val isApproved: Boolean
 )

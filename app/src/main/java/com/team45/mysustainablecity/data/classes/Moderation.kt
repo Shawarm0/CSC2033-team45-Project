@@ -20,5 +20,5 @@ data class Moderation(
     val reason: String,
 
     @SerialName("action_at")
-    val actionAt: Instant
+    val actionAt: Instant?
 )

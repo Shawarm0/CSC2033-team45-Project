@@ -23,7 +23,7 @@ class ModRep(
 
     suspend fun loadModerationHistoryFromModUser(modId: String) {
         val history = client
-            .from("moderation")
+            .from("moderation_actions")
             .select {
                 filter {
                     eq("moderator_id", modId)
@@ -37,7 +37,7 @@ class ModRep(
 
     suspend fun getModerationHistoryFromPost(postId: String): StateFlow<List<Moderation>>{
         val result = client
-            .from("moderation")
+            .from("moderation_actions")
             .select {
                 filter { eq("post_id", postId) }
             }
@@ -51,11 +51,10 @@ class ModRep(
 
         // Update post status
         client
-            .from("post")
+            .from("posts")
             .update(
                 buildJsonObject {
-                    put("status", "REJECTED")
-                    put("is_approved", false)
+                    put("status", "rejected")
                 }
             ) {
                 filter {
@@ -65,19 +64,25 @@ class ModRep(
 
         // Insert moderation record
         client
-            .from("moderation")
-            .insert(moderation)
+            .from("moderation_actions")
+            .insert(
+                buildJsonObject {
+                    put("post_id", moderation.postId)
+                    put("moderator_id", moderation.moderatorId)
+                    put("action", moderation.action)
+                    put("reason", moderation.reason)
+                }
+            )
     }
 
     suspend fun approvePost(moderation: Moderation) {
 
         // Update post approval
         client
-            .from("post")
+            .from("posts")
             .update(
                 buildJsonObject {
-                    put("is_approved", true)
-                    put("status", "ACTIVE")
+                    put("status", "approved")
                 }
             ) {
                 filter {
@@ -87,17 +92,24 @@ class ModRep(
 
         // Insert moderation record
         client
-            .from("moderation")
-            .insert(moderation)
+            .from("moderation_actions")
+            .insert(
+                buildJsonObject {
+                    put("post_id", moderation.postId)
+                    put("moderator_id", moderation.moderatorId)
+                    put("action", moderation.action)
+                    put("reason", moderation.reason)
+                }
+            )
     }
 
     suspend fun getUnapprovedPosts(): StateFlow<List<Post>> {
 
         val posts = client
-            .from("post")
+            .from("posts")
             .select {
                 filter {
-                    eq("is_approved", false)
+                    eq("status", "awaiting approval")
                 }
             }
             .decodeList<Post>()
