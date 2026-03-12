@@ -22,20 +22,20 @@ import com.team45.mysustainablecity.ui.theme.Primary
 
 /**
  * A reusable rounded Material 3 button used throughout the app
- * to provide consistent styling and behaviour.
+ * to provide consistent styling and behavior.
  *
  * This composable wraps a Material 3 [androidx.compose.material3.Button] and applies:
  * - Rounded pill shape
- * - Custom primary colour styling
+ * - Custom primary color styling
  * - Optional leading icon
  * - Consistent height and horizontal padding
- * - Styled disabled state colours
+ * - Styled disabled state colors
  *
  * @param modifier Modifier applied to the button.
  * @param text The text displayed inside the button.
  * @param symbol Optional [ImageVector] displayed before the text.
  * @param onClick Callback invoked when the button is pressed.
- * @param color Background colour of the button. Defaults to [Primary].
+ * @param color Background color of the button. Defaults to [Primary].
  * @param enabled Controls whether the button is clickable.
  */
 @Composable

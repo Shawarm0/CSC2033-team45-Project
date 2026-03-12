@@ -8,9 +8,13 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.foundation.layout.padding
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.Notifications
@@ -20,19 +24,22 @@ import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Place
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Modifier
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.team45.mysustainablecity.ui.components.BottomBar
-import com.team45.mysustainablecity.ui.screens.AlertScreen
 import com.team45.mysustainablecity.ui.screens.DiscoverScreen
 import com.team45.mysustainablecity.ui.screens.HomeScreen
 import com.team45.mysustainablecity.ui.screens.LoginScreen
+import com.team45.mysustainablecity.ui.screens.PostScreen
 import com.team45.mysustainablecity.ui.screens.SignUpScreen
 import com.team45.mysustainablecity.ui.theme.Background
 import com.team45.mysustainablecity.ui.theme.MySustainableCityTheme
@@ -48,10 +55,15 @@ class MainActivity : ComponentActivity() {
     val authViewModel = AuthViewModel(userRep = appContainer.userRepository)
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
-        Log.d("MainActivity", "onCreate() called")
+
+        splashScreen.setKeepOnScreenCondition {
+            !authViewModel.isSessionReady.value
+        }
 
         enableEdgeToEdge()
+
         setContent {
             MySustainableCityTheme {
                 val rootNavController = rememberNavController()
@@ -133,6 +145,9 @@ sealed class Screen(
     object Discover : Screen("discover", Icons.Filled.Explore, Icons.Outlined.Explore)
     object Alerts : Screen ("alerts", Icons.Filled.Notifications, Icons.Outlined.Notifications)
     object Post : Screen("post")
+    object DiscoverPost : Screen("discover?locationName={locationName}") {
+        fun createRoute(locationName: String) = "discover?locationName=$locationName"
+    }
     object Login : Screen("login")
     object SignUp : Screen("signup")
     object Profile : Screen("profile")
@@ -144,15 +159,39 @@ fun AppNavigation(
     rootNavController: NavHostController,
     authViewModel: AuthViewModel
 ) {
+    val isAuthenticated by authViewModel.isAuthenticated.collectAsState()
+    val isSessionReady by authViewModel.isSessionReady.collectAsState()
+
+    if (!isSessionReady) return
+
+    // Remember the start destination so NavHost doesn't get recreated on auth change
+    val startDestination = remember {
+        if (isAuthenticated) Screen.Home.route else Screen.Login.route
+    }
+
+
     NavHost(
         navController = rootNavController,
-        startDestination = Screen.Login.route,
+        startDestination = startDestination,
         enterTransition = {
             val from = initialState.destination.route
             val to = targetState.destination.route
 
-            when (// Forward: Login → SignUp or Main
-                from) {
+            when (from) {
+
+                // Logout: Main → Login
+                Screen.Discover.route,
+                Screen.Home.route,
+                Screen.Alerts.route,
+                Screen.Profile.route -> {
+                    if (to == Screen.Login.route) {
+                        fadeIn(
+                            animationSpec = tween(1000)
+                        )
+                    } else EnterTransition.None
+                }
+
+                // Forward: Login → SignUp or Main
                 Screen.Login.route if to in listOf(
                     Screen.SignUp.route,
                     Screen.Home.route,
@@ -165,9 +204,8 @@ fun AppNavigation(
                     )
                 }
 
-                // Back: SignUp → Login
                 Screen.SignUp.route if to == Screen.Login.route -> {
-                    EnterTransition.None   // 🔥 important
+                    EnterTransition.None
                 }
 
                 else -> EnterTransition.None
@@ -206,8 +244,9 @@ fun AppNavigation(
     ) {
         composable(Screen.Login.route) { LoginScreen(rootNavController, authViewModel) }
         composable(Screen.SignUp.route) { SignUpScreen(rootNavController, authViewModel) }
-        composable(Screen.Home.route) { MainScaffold() }
+        composable(Screen.Home.route) { MainScaffold(authViewModel, rootNavController) }
     }
+
 }
 
 
@@ -216,6 +255,8 @@ fun AppNavigation(
 
 @Composable
 fun MainScaffold(
+    authViewModel: AuthViewModel,
+    rootNavController: NavHostController
 ) {
     val innerNavController = rememberNavController()
     val currentBackStackEntry by innerNavController.currentBackStackEntryAsState()
@@ -252,22 +293,54 @@ fun MainScaffold(
         NavHost(
             navController = innerNavController,
             startDestination = Screen.Home.route,
-            modifier = Modifier.padding(padding),
             enterTransition = {
-                EnterTransition.None
+                val to = targetState.destination.route
+                if (to == Screen.DiscoverPost.route) {
+                    slideInVertically(
+                        initialOffsetY = { it },
+                        animationSpec = tween(500)
+                    )
+                } else {
+                    EnterTransition.None
+                }
             },
             exitTransition = {
-                ExitTransition.None
+                val from = initialState.destination.route
+                if (from == Screen.DiscoverPost.route) {
+                    slideOutVertically(
+                        targetOffsetY = { it },
+                        animationSpec = tween(500)
+                    )
+                } else {
+                    ExitTransition.None
+                }
             }
+
         ) {
             composable(Screen.Home.route) {
-                HomeScreen(innerNavController)
+                HomeScreen(
+                    innerNavController,
+                    rootNavController,
+                    padding,
+                    authViewModel
+                )
             }
             composable(Screen.Discover.route) {
-                DiscoverScreen(innerNavController)
+                DiscoverScreen(
+                    authViewModel,
+                    padding,
+                    rootNavController
+                )
+            }
+            composable(
+                route = Screen.DiscoverPost.route,
+                arguments = listOf(navArgument("locationName") { nullable = true })
+            ) { backStackEntry ->
+                val locationName = backStackEntry.arguments?.getString("locationName")
+                PostScreen(authViewModel, innerNavController, locationName, padding)
             }
             composable(Screen.Alerts.route) {
-                AlertScreen(innerNavController)
+                //AlertScreen(innerNavController)
             }
         }
     }

@@ -1,6 +1,7 @@
 package com.team45.mysustainablecity.reps
 
 import android.util.Log
+import com.team45.mysustainablecity.data.classes.Alert
 import com.team45.mysustainablecity.data.classes.User
 import com.team45.mysustainablecity.data.remote.SupabaseClientProvider
 import io.github.jan.supabase.auth.auth
@@ -9,11 +10,11 @@ import io.github.jan.supabase.auth.status.SessionStatus
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlin.time.ExperimentalTime
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import kotlin.uuid.ExperimentalUuidApi
 
 @OptIn(ExperimentalTime::class)
@@ -24,77 +25,233 @@ class UserRep {
     /**
      * Register user with Supabase Auth + insert profile
      */
-    @OptIn(ExperimentalUuidApi::class)
-    suspend fun registerUser(
-        email: String,
-        password: String,
-    ) {
+    suspend fun registerUser(email: String, password: String) {
         client.auth.signUpWith(Email) {
             this.email = email
             this.password = password
         }
     }
+
     //suspend because needs to pause without blocking main thread
     suspend fun loginUser(email: String, password: String) {
-        try {
-            val result = client.auth.signInWith(Email) {
-                this.email = email
-                this.password = password
-            }
-            Log.d("UserRep", "Sign in result: $result")
-        } catch (e: Exception) {
-            Log.e("UserRep", "Login failed: ${e.message}")
+        val result = client.auth.signInWith(Email) {
+            this.email = email
+            this.password = password
         }
+        Log.d("UserRep", "----- Sign in result: $result -----")
+    }
+
+    suspend fun logout() {
+        client.auth.signOut()
     }
 
     @OptIn(ExperimentalUuidApi::class)
     fun observeSession(): Flow<User?> = flow {
-
         Log.d("UserRep", "Starting session observation")
 
+        // Emit based on existing session FIRST before collecting status updates
         val existing = client.auth.currentSessionOrNull()
-
         if (existing != null) {
             Log.d("UserRep", "Existing session found")
             emit(loadUser(existing.user?.id))
         } else {
             Log.d("UserRep", "No existing session")
-            emit(null)
+            emit(null)  // Only emit null if we genuinely have no session
         }
 
+        // Then continue watching for changes (login/logout events)
         client.auth.sessionStatus.collect { status ->
-
             Log.d("UserRep", "Session status update: $status")
-
             when (status) {
-                is SessionStatus.Authenticated -> {
-                    emit(loadUser(status.session.user?.id))
-                }
-
-                is SessionStatus.NotAuthenticated -> {
-                    emit(null)
-                }
-
+                is SessionStatus.Authenticated -> emit(loadUser(status.session.user?.id))
+                is SessionStatus.NotAuthenticated -> emit(null)
                 else -> Unit
             }
         }
     }.flowOn(Dispatchers.IO)
 
     private suspend fun loadUser(id: String?): User? {
-        if (id == null) return null
+        if (id == null) {
+            Log.e("UserRep", "Failed to load profile: User ID is null")
+            return null
+        }
 
         Log.d("UserRep", "Loading profile for $id")
 
         return client
             .from("users")
             .select {
-                filter { eq("userID", id) }
+                filter { eq("user_id", id) }
             }
             .decodeSingleOrNull<User>()
     }
 
 
-    suspend fun logout() {
-        client.auth.signOut()
+    suspend fun setUsername(username: String): Boolean {
+        val userId = client.auth.currentUserOrNull()?.id ?: run {
+            Log.e("UserRep", "setUsername: no authenticated user")
+            return false
+        }
+        return try {
+            client.from("users").update(mapOf("username" to username)) {
+                filter { eq("user_id", userId) }
+            }
+            Log.d("UserRep", "Successfully set username for $userId")
+            true
+        } catch (e: Exception) {
+            Log.e("UserRep", "Failed to set username: ${e.message}")
+            // Rethrow with a clean message so the ViewModel can surface it
+            if (e.message?.contains("users_username_key") == true) {
+                throw Exception("Username already taken")
+            }
+            throw e
+        }
+    }
+
+    /**
+     * Update a user in Supabase
+     */
+    suspend fun updateUser(user: User): Boolean {
+        Log.d("UserRep", "Updating user profile for ${user.userID}")
+        try {
+            client.from("users").update(user) {
+                filter {
+                    eq("user_id", user.userID)
+                }
+            }
+            return true
+        } catch (e: Exception) {
+            Log.e("UserRep", "Failed to update user profile: ${e.message}")
+            return false
+        }
+    }
+
+
+    suspend fun deleteUser(id: String?): Boolean {
+        if (id == null) {
+            Log.e("UserRep", "Failed to delete user: User ID is null")
+            return false
+        }
+
+        Log.d("UserRep", "Attempting to delete user profile for $id")
+        try {
+            client.from("users").delete {
+                filter {
+                    eq("user_id", id)
+                }
+            }
+            Log.d("UserRep", "Successfully deleted user profile for $id")
+            return true
+        } catch (e: Exception) {
+            Log.e("UserRep", "Failed to delete user profile: ${e.message}")
+            return false
+        }
+    }
+
+    suspend fun getSelf(): User? {
+        val currentUser = client.auth.currentUserOrNull()
+        if (currentUser != null) {
+            Log.d("UserRep", "Found currently authenticated user ${currentUser.id}, returning...")
+            return loadUser(currentUser.id)
+        } else {
+            Log.d("UserRep", "No user currently authenticated")
+            return null
+        }
+    }
+
+    suspend fun getAlerts(id: String?): StateFlow<List<Alert>> {
+        val alertsFlow = MutableStateFlow<List<Alert>>(emptyList())
+
+        if (id == null) return alertsFlow
+
+        try {
+            val alerts = client.from("alerts").select {
+                filter { eq("user_id", id) }
+            }.decodeList<Alert>()
+            Log.d("UserRep", "Alerts: $alerts")
+            alertsFlow.value = alerts
+        } catch (e: Exception) {
+            Log.e("UserRep", "Failed to get alerts: ${e.message}")
+        }
+        return alertsFlow
+    }
+
+    suspend fun markAlertRead(alertId: String?): Boolean {
+        if (alertId == null) {
+            Log.e("UserRep", "Failed to mark alert as read: Alert ID is null")
+            return false
+        }
+
+        try {
+            client.from("alerts").update(mapOf("is_read" to true)) {    // Set is_read field to true, no need to check if it's false before
+                filter { eq("alert_id", alertId) }
+            }
+            Log.d("UserRep", "Successfully marked alert: $alertId as read")
+            return true
+        } catch (e: Exception) {
+            Log.e("UserRep", "Failed to mark alert as read: ${e.message}")
+            return false
+        }
+    }
+
+    suspend fun markAllRead(): Boolean {
+        try {
+            val userID = getSelf()?.userID
+
+            if (userID == null) {
+                Log.e("UserRep", "Failed to mark all alerts as read: User ID is null")
+                return false
+            }
+
+            client.from("alerts").update(mapOf("is_read" to true)) {
+                filter { eq("user_id", userID) }
+            }
+            Log.d("UserRep", "Successfully marked as read all alerts for user ${getSelf()?.userID}")
+            return true
+        } catch (e: Exception) {
+            Log.e("UserRep", "Failed to mark all alerts as read: ${e.message}")
+            return false
+        }
+    }
+
+    suspend fun deleteAlert(alertId: String?): Boolean {
+        if (alertId == null) {
+            Log.e("UserRep", "Failed to delete alert: Alert ID is null")
+            return false
+        }
+
+        try {
+            client.from("alerts").delete {
+                filter { eq("alert_id", alertId) }
+            }
+            Log.d("UserRep", "Successfully deleted alert: $alertId")
+            return true
+        } catch (e: Exception) {
+            Log.e("UserRep", "Failed to delete alert: ${e.message}")
+            return false
+        }
+    }
+
+    suspend fun clearAlerts(): Boolean {
+        try {
+            val userID = getSelf()?.userID
+
+            if (userID == null) {
+                Log.e("UserRep", "Failed to clear alerts: User ID is null")
+                return false
+            }
+
+            client.from("alerts").delete {
+                filter {
+                    eq("user_id", userID)
+                    eq("is_read", true)
+                }
+            }
+            Log.d("UserRep", "Successfully clear alerts for user ${getSelf()?.userID}")
+            return true
+        } catch (e: Exception) {
+            Log.e("UserRep", "Failed to clear alerts: ${e.message}")
+            return false
+        }
     }
 }
