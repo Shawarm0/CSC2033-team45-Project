@@ -7,6 +7,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class PostInfo(
+    val post: Post,
     @SerialName("like_count") val likeCount: Int,
     val tags: List<Tag>,
     val images: List<Image>,
@@ -14,7 +15,6 @@ data class PostInfo(
     val username: Username
 
 )
-
 
 @Serializable
 data class Post (
