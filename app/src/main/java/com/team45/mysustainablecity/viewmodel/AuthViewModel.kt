@@ -3,7 +3,6 @@ package com.team45.mysustainablecity.viewmodel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.team45.mysustainablecity.data.classes.Alert
 import com.team45.mysustainablecity.data.classes.User
 import com.team45.mysustainablecity.data.remote.SupabaseClientProvider
 import com.team45.mysustainablecity.reps.UserRep
@@ -54,6 +53,8 @@ class AuthViewModel(
             }
         }
     }
+
+
 
     fun register(
         email: String,
@@ -150,6 +151,27 @@ class AuthViewModel(
         }
     }
 
+    fun clearOperationSuccess() {
+        _operationSuccess.value = null
+    }
+
+    fun setUsername(username: String) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            _errorState.value = null
+            try {
+                val success = userRep.setUsername(username)
+                _operationSuccess.value = success
+            } catch (e: Exception) {
+                // This now includes "Username already taken" from the unique constraint
+                _errorState.value = e.message ?: "Failed to set username"
+                _operationSuccess.value = false
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
 
     /**
      * Load current user from database
@@ -168,6 +190,9 @@ class AuthViewModel(
         }
     }
 
+    private val _isLoggedOut = MutableStateFlow(false)
+    val isLoggedOut: StateFlow<Boolean> = _isLoggedOut
+
     fun logout() {
         if (_isLoading.value) return
 
@@ -177,12 +202,17 @@ class AuthViewModel(
 
             try {
                 userRep.logout()
+                _isLoggedOut.value = true  // Signal immediately after logout call
             } catch (e: Exception) {
                 _errorState.value = e.message ?: "Logout failed"
             } finally {
                 _isLoading.value = false
             }
         }
+    }
+
+    fun clearLoggedOut() {
+        _isLoggedOut.value = false
     }
 
 

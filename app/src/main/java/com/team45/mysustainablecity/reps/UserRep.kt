@@ -5,8 +5,6 @@ import com.team45.mysustainablecity.data.classes.Alert
 import com.team45.mysustainablecity.data.classes.User
 import com.team45.mysustainablecity.data.remote.SupabaseClientProvider
 import io.github.jan.supabase.auth.auth
-import io.github.jan.supabase.auth.exception.AuthRestException
-import io.github.jan.supabase.auth.exception.AuthWeakPasswordException
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.auth.status.SessionStatus
 import io.github.jan.supabase.postgrest.from
@@ -88,6 +86,28 @@ class UserRep {
             .decodeSingleOrNull<User>()
     }
 
+
+    suspend fun setUsername(username: String): Boolean {
+        val userId = client.auth.currentUserOrNull()?.id ?: run {
+            Log.e("UserRep", "setUsername: no authenticated user")
+            return false
+        }
+        return try {
+            client.from("users").update(mapOf("username" to username)) {
+                filter { eq("user_id", userId) }
+            }
+            Log.d("UserRep", "Successfully set username for $userId")
+            true
+        } catch (e: Exception) {
+            Log.e("UserRep", "Failed to set username: ${e.message}")
+            // Rethrow with a clean message so the ViewModel can surface it
+            if (e.message?.contains("users_username_key") == true) {
+                throw Exception("Username already taken")
+            }
+            throw e
+        }
+    }
+
     /**
      * Update a user in Supabase
      */
@@ -163,7 +183,7 @@ class UserRep {
         }
 
         try {
-            client.from("alerts").update(mapOf("is_read" to true)) {    // Set is_read field to true, no need to check if its false before
+            client.from("alerts").update(mapOf("is_read" to true)) {    // Set is_read field to true, no need to check if it's false before
                 filter { eq("alert_id", alertId) }
             }
             Log.d("UserRep", "Successfully marked alert: $alertId as read")
