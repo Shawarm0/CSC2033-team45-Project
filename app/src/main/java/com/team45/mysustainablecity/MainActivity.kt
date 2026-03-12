@@ -60,11 +60,11 @@ class MainActivity : ComponentActivity() {
         val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
 
-        runBlocking {
-            splashScreen.setKeepOnScreenCondition {
-                !authViewModel.isSessionReady.value
-            }
+
+        splashScreen.setKeepOnScreenCondition {
+            !authViewModel.isSessionReady.value
         }
+
 
         enableEdgeToEdge()
 
