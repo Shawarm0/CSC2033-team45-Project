@@ -78,6 +78,7 @@ dependencies {
     implementation("io.github.jan-tennert.supabase:auth-kt")
     implementation("io.github.jan-tennert.supabase:realtime-kt")
     implementation("io.ktor:ktor-client-okhttp:$ktorVersion")
+    implementation("io.github.jan-tennert.supabase:functions-kt")
 
 
     // This is to get the icons imported
