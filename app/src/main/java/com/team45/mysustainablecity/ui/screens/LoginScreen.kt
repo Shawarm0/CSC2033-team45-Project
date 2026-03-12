@@ -39,8 +39,10 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.team45.mysustainablecity.Screen
 import com.team45.mysustainablecity.ui.components.AppButton
 import com.team45.mysustainablecity.ui.components.CustomTextField
@@ -240,4 +242,14 @@ fun LoginScreen(
             }
         }
     }
+}
+
+@Composable
+@Preview
+fun LoginPreview() {
+    val rootNavController = rememberNavController()
+
+    LoginScreen(
+        rootNavController
+    )
 }
