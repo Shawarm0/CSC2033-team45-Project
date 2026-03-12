@@ -333,7 +333,7 @@ fun MainScaffold(
                 DiscoverScreen(
                     authViewModel,
                     padding,
-                    rootNavController
+                    innerNavController
                 )
             }
             composable(
