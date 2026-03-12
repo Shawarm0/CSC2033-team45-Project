@@ -1,5 +1,6 @@
 package com.team45.mysustainablecity.data.classes
 
+import com.google.android.gms.maps.model.LatLng
 import kotlinx.datetime.Instant
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -7,7 +8,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class PostInfo(
-    val post: Post,
+//    val post: Post, Also commented this out just so you could see the structure.
     @SerialName("like_count") val likeCount: Int,
     val tags: List<Tag>,
     val images: List<Image>,
@@ -15,19 +16,37 @@ data class PostInfo(
     val username: Username
 
 )
+//
+//@Serializable
+//data class Post (
+//    @SerialName("post_id") val postId: String,
+//    @SerialName("author_id") val authorId: String,
+//    val title: String,
+//    val content: String,
+//    @SerialName("created_at") val createdAt: String,
+//    @SerialName("expires_at") val expiresAt: String?,
+//    @SerialName("updated_at") val updatedAt: String?,
+//    @SerialName("has_location") val hasLocation: Boolean,
+//    val status: String
+//)
 
-@Serializable
-data class Post (
-    @SerialName("post_id") val postId: String,
-    @SerialName("author_id") val authorId: String,
+
+// Add SerialNames and link it to database please this is how the ui uses it
+data class Post(
+    val id: String,
+    val username: String,
+    val timeAgo: String,
     val title: String,
-    val content: String,
-    @SerialName("created_at") val createdAt: String,
-    @SerialName("expires_at") val expiresAt: String?,
-    @SerialName("updated_at") val updatedAt: String?,
-    @SerialName("has_location") val hasLocation: Boolean,
-    val status: String
+    val body: String,
+    val likes: Int,
+    val comments: Int,
+    val tags: List<com.team45.mysustainablecity.utils.Tag> = emptyList(),
+    val hasImage: Boolean = false,
+    val imageUrl: String? = null,
+    val position: LatLng? = null,
+    val description: String = body,
 )
+
 
 @Serializable
 data class Tag (

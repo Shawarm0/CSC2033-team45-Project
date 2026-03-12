@@ -46,6 +46,8 @@ import com.team45.mysustainablecity.ui.theme.Background
 import com.team45.mysustainablecity.ui.theme.MySustainableCityTheme
 import com.team45.mysustainablecity.utils.AppContainer
 import com.team45.mysustainablecity.viewmodel.AuthViewModel
+import com.team45.mysustainablecity.viewmodel.DiscoverViewModel
+import com.team45.mysustainablecity.viewmodel.MapViewModel
 import kotlinx.coroutines.runBlocking
 
 /**
@@ -55,6 +57,8 @@ class MainActivity : ComponentActivity() {
 
     val appContainer = AppContainer()
     val authViewModel = AuthViewModel(userRep = appContainer.userRepository)
+    val mapViewModel = MapViewModel(postRep = appContainer.postRepository)
+    val discoverViewModel = DiscoverViewModel(postRep = appContainer.postRepository)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
@@ -71,7 +75,12 @@ class MainActivity : ComponentActivity() {
         setContent {
             MySustainableCityTheme {
                 val rootNavController = rememberNavController()
-                AppNavigation(rootNavController, authViewModel)
+                AppNavigation(
+                    rootNavController,
+                    authViewModel,
+                    mapViewModel,
+                    discoverViewModel
+                )
             }
         }
     }
@@ -161,7 +170,9 @@ sealed class Screen(
 @Composable
 fun AppNavigation(
     rootNavController: NavHostController,
-    authViewModel: AuthViewModel
+    authViewModel: AuthViewModel,
+    mapViewModel: MapViewModel,
+    discoverViewModel: DiscoverViewModel
 ) {
     val isAuthenticated by authViewModel.isAuthenticated.collectAsState()
     val isSessionReady by authViewModel.isSessionReady.collectAsState()
@@ -248,7 +259,7 @@ fun AppNavigation(
     ) {
         composable(Screen.Login.route) { LoginScreen(rootNavController, authViewModel) }
         composable(Screen.SignUp.route) { SignUpScreen(rootNavController, authViewModel) }
-        composable(Screen.Home.route) { MainScaffold(authViewModel, rootNavController) }
+        composable(Screen.Home.route) { MainScaffold(authViewModel, rootNavController, mapViewModel, discoverViewModel) }
     }
 
 }
@@ -260,7 +271,9 @@ fun AppNavigation(
 @Composable
 fun MainScaffold(
     authViewModel: AuthViewModel,
-    rootNavController: NavHostController
+    rootNavController: NavHostController,
+    mapViewModel: MapViewModel,
+    discoverViewModel: DiscoverViewModel
 ) {
     val innerNavController = rememberNavController()
     val currentBackStackEntry by innerNavController.currentBackStackEntryAsState()
@@ -326,14 +339,16 @@ fun MainScaffold(
                     innerNavController,
                     rootNavController,
                     padding,
-                    authViewModel
+                    authViewModel,
+                    mapViewModel
                 )
             }
             composable(Screen.Discover.route) {
                 DiscoverScreen(
                     authViewModel,
                     padding,
-                    innerNavController
+                    innerNavController,
+                    discoverViewModel
                 )
             }
             composable(
