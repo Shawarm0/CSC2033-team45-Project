@@ -114,7 +114,7 @@ fun DiscoverMap(
                 }
                 activeFilters.isEmpty() -> locations
                 else -> locations.filter { location ->
-                    location.tags.any { it in activeFilters }
+                    activeFilters.all { it in location.tags }
                 }
             }
         }
@@ -437,7 +437,10 @@ fun DiscoverMap(
         ) {
             ProfileScreen(
                 rootNavController,
-                authViewModel = authViewModel
+                authViewModel = authViewModel,
+                onLogOut = {
+                    showProfile.value = false
+                }
             )
         }
     }

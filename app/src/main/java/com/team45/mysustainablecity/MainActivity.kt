@@ -36,6 +36,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.team45.mysustainablecity.ui.components.BottomBar
+import com.team45.mysustainablecity.ui.screens.AlertsScreen
 import com.team45.mysustainablecity.ui.screens.DiscoverScreen
 import com.team45.mysustainablecity.ui.screens.HomeScreen
 import com.team45.mysustainablecity.ui.screens.LoginScreen
@@ -45,6 +46,7 @@ import com.team45.mysustainablecity.ui.theme.Background
 import com.team45.mysustainablecity.ui.theme.MySustainableCityTheme
 import com.team45.mysustainablecity.utils.AppContainer
 import com.team45.mysustainablecity.viewmodel.AuthViewModel
+import kotlinx.coroutines.runBlocking
 
 /**
  * The main entry point of the app
@@ -58,8 +60,10 @@ class MainActivity : ComponentActivity() {
         val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
 
-        splashScreen.setKeepOnScreenCondition {
-            !authViewModel.isSessionReady.value
+        runBlocking {
+            splashScreen.setKeepOnScreenCondition {
+                !authViewModel.isSessionReady.value
+            }
         }
 
         enableEdgeToEdge()
@@ -329,7 +333,7 @@ fun MainScaffold(
                 DiscoverScreen(
                     authViewModel,
                     padding,
-                    rootNavController
+                    innerNavController
                 )
             }
             composable(
@@ -340,7 +344,7 @@ fun MainScaffold(
                 PostScreen(authViewModel, innerNavController, locationName, padding)
             }
             composable(Screen.Alerts.route) {
-                //AlertScreen(innerNavController)
+                AlertsScreen(innerNavController)
             }
         }
     }
