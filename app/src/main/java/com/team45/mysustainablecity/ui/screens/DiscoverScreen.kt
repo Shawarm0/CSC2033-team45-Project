@@ -42,11 +42,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.google.android.gms.maps.model.LatLng
 import com.team45.mysustainablecity.Screen
-import com.team45.mysustainablecity.reps.PostRep
+import com.team45.mysustainablecity.data.classes.Post
 import com.team45.mysustainablecity.ui.components.FilterPill
 import com.team45.mysustainablecity.utils.Tag
 import com.team45.mysustainablecity.viewmodel.AuthViewModel
@@ -112,7 +110,7 @@ fun DiscoverScreen(
             }
         } else {
             LazyColumn(modifier = Modifier.padding(top = 4.dp)) {
-                itemsIndexed(visiblePosts) { index, post ->
+                itemsIndexed(visiblePosts) { index: Int, post: Post ->
                     PostCard(
                         post = post,
                         isLiked = likedPosts[post.id] == true,
@@ -152,7 +150,6 @@ fun PostCard(
             .clickable(onClick = onClick)
             .padding(vertical = 4.dp)
     ) {
-        // Header row
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -221,7 +218,6 @@ fun PostCard(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Action row
         Row(
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalAlignment = Alignment.CenterVertically

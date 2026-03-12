@@ -2,8 +2,8 @@ package com.team45.mysustainablecity.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import com.team45.mysustainablecity.data.classes.Post
 import com.team45.mysustainablecity.reps.PostRep
-import com.team45.mysustainablecity.ui.screens.Post
 import com.team45.mysustainablecity.utils.Tag
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

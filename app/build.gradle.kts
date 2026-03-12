@@ -88,9 +88,6 @@ dependencies {
     // This is for the navigation graph.
     val nav_version = "2.9.7"
     implementation("androidx.navigation:navigation-compose:$nav_version")
-
-
-    implementation("com.google.maps.android:maps-compose:4.3.3")
     implementation("com.google.android.gms:play-services-location:21.0.1")
     implementation("com.google.accompanist:accompanist-permissions:0.34.0")
     implementation(libs.core.splashscreen)

@@ -10,7 +10,7 @@ import kotlinx.serialization.Serializable
 data class PostInfo(
 //    val post: Post, Also commented this out just so you could see the structure.
     @SerialName("like_count") val likeCount: Int,
-    val tags: List<Tag>,
+    val tags: List<PostTag>,
     val images: List<Image>,
     val location: Location,
     val username: Username
@@ -49,7 +49,7 @@ data class Post(
 
 
 @Serializable
-data class Tag (
+data class PostTag (
     val name: String
 )
 
