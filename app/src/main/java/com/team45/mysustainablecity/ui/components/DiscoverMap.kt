@@ -437,7 +437,10 @@ fun DiscoverMap(
         ) {
             ProfileScreen(
                 rootNavController,
-                authViewModel = authViewModel
+                authViewModel = authViewModel,
+                onLogOut = {
+                    showProfile.value = false
+                }
             )
         }
     }

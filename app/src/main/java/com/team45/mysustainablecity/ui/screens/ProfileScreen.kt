@@ -42,6 +42,7 @@ import com.team45.mysustainablecity.Screen
 import com.team45.mysustainablecity.ui.theme.BottomBarColor
 import com.team45.mysustainablecity.ui.theme.Primary
 import com.team45.mysustainablecity.ui.theme.TextColor
+import com.team45.mysustainablecity.viewmodel.AuthViewModel
 
 data class ProfileMenuItem(
     val label: String,
@@ -53,7 +54,9 @@ data class ProfileMenuItem(
 @Composable
 fun ProfileScreen(
     navController: NavController,
-    username: String = "Username"
+    username: String = "Username",
+    authViewModel: AuthViewModel,
+    onLogOut: () -> Unit
 ) {
     val menuItems = listOf(
         ProfileMenuItem("Account", Icons.Default.AccountBox) {},
@@ -134,6 +137,21 @@ fun ProfileScreen(
                 }
             }
 
+
+            Button(
+                onClick = {
+                    authViewModel.logout()
+                    onLogOut()
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(Screen.Home.route) {
+                            inclusive = true
+                        }
+                    }
+                }
+            ) {
+                Text("Log Out")
+            }
+
         }
     }
 }
@@ -163,12 +181,12 @@ fun ProfileMenuRow(item: ProfileMenuItem) {
 }
 
 
-@Composable
-@Preview
-fun ProfilePreview() {
-    val rootNavController = rememberNavController()
-
-    ProfileScreen(
-        rootNavController
-    )
-}
+//@Composable
+//@Preview
+//fun ProfilePreview() {
+//    val rootNavController = rememberNavController()
+//
+//    ProfileScreen(
+//        rootNavController
+//    )
+//}

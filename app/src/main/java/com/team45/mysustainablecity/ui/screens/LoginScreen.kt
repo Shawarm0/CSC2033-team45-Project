@@ -64,11 +64,13 @@ fun LoginScreen(
     var password by remember { mutableStateOf("") }
     val errorState by authViewModel.errorState.collectAsState()
     val isAuthenticated by authViewModel.isAuthenticated.collectAsState()
+    val isLoading by authViewModel.isLoading.collectAsState()
+
 
 
     // When auth succeeds, move to username step AND clear operationSuccess
     LaunchedEffect(isAuthenticated) {
-        if (isAuthenticated) {
+        if (isAuthenticated && !isLoading) {
             navController.navigate(Screen.Home.route) {
                 popUpTo(Screen.Login.route) { inclusive = true }
             }
@@ -244,12 +246,12 @@ fun LoginScreen(
     }
 }
 
-@Composable
-@Preview
-fun LoginPreview() {
-    val rootNavController = rememberNavController()
-
-    LoginScreen(
-        rootNavController
-    )
-}
+//@Composable
+//@Preview
+//fun LoginPreview() {
+//    val rootNavController = rememberNavController()
+//
+//    LoginScreen(
+//        rootNavController
+//    )
+//}

@@ -36,6 +36,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.team45.mysustainablecity.ui.components.BottomBar
+import com.team45.mysustainablecity.ui.screens.AlertsScreen
 import com.team45.mysustainablecity.ui.screens.DiscoverScreen
 import com.team45.mysustainablecity.ui.screens.HomeScreen
 import com.team45.mysustainablecity.ui.screens.LoginScreen
@@ -343,7 +344,7 @@ fun MainScaffold(
                 PostScreen(authViewModel, innerNavController, locationName, padding)
             }
             composable(Screen.Alerts.route) {
-                //AlertScreen(innerNavController)
+                AlertsScreen(innerNavController)
             }
         }
     }
