@@ -11,10 +11,6 @@ import kotlinx.coroutines.flow.asStateFlow
 
 class DiscoverViewModel(private val postRep: PostRep) : ViewModel() {
 
-    // -------------------------------------------------------------------------
-    // Filters
-    // -------------------------------------------------------------------------
-
     private val _activeFilters = MutableStateFlow<Set<Tag>>(emptySet())
     val activeFilters: StateFlow<Set<Tag>> = _activeFilters.asStateFlow()
 
@@ -26,9 +22,6 @@ class DiscoverViewModel(private val postRep: PostRep) : ViewModel() {
         }
     }
 
-    // -------------------------------------------------------------------------
-    // Visible posts — derived from filters
-    // -------------------------------------------------------------------------
 
     /**
      * Returns the filtered list of [Post]s for the feed.
@@ -36,39 +29,30 @@ class DiscoverViewModel(private val postRep: PostRep) : ViewModel() {
      */
     fun visiblePosts(activeFilters: Set<Tag> = _activeFilters.value): List<Post> {
         return if (activeFilters.isEmpty()) {
-            postRep.allPosts
+            postRep.uiPosts.value
         } else {
-            postRep.allPosts.filter { post ->
+            postRep.uiPosts.value.filter { post ->
                 activeFilters.all { it in post.tags }
             }
         }
     }
 
-    // -------------------------------------------------------------------------
-    // Like state
-    // -------------------------------------------------------------------------
 
-    // Keyed by post id — tracks which posts the current user has liked
+    // Just tracks +1 or -1 adjustments made by the user
+    private val _likeAdjustments = MutableStateFlow<Map<String, Int>>(emptyMap())
     private val _likedPosts = MutableStateFlow<Map<String, Boolean>>(emptyMap())
+
     val likedPosts: StateFlow<Map<String, Boolean>> = _likedPosts.asStateFlow()
 
-    // Keyed by post id — mutable like counts (seeded from the post data)
-    private val _likeCounts = MutableStateFlow<Map<String, Int>>(
-        postRep.allPosts.associate { it.id to it.likes }
-    )
-    val likeCounts: StateFlow<Map<String, Int>> = _likeCounts.asStateFlow()
+    fun getLikeCount(post: Post): Int {
+        return post.likes + (_likeAdjustments.value[post.id] ?: 0)
+    }
 
     fun toggleLike(postId: String) {
         val currentlyLiked = _likedPosts.value[postId] == true
-        _likedPosts.value = _likedPosts.value.toMutableMap().apply {
-            put(postId, !currentlyLiked)
-        }
-        val currentCount = _likeCounts.value[postId]
-            ?: postRep.allPosts.find { it.id == postId }?.likes
-            ?: 0
-        _likeCounts.value = _likeCounts.value.toMutableMap().apply {
-            put(postId, currentCount + if (currentlyLiked) -1 else 1)
-        }
+        _likedPosts.value += (postId to !currentlyLiked)
+        val currentAdjustment = _likeAdjustments.value[postId] ?: 0
+        _likeAdjustments.value += (postId to currentAdjustment + if (currentlyLiked) -1 else 1)
     }
 
 }

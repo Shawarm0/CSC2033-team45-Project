@@ -1,20 +1,46 @@
 package com.team45.mysustainablecity.reps
 
+import android.util.Log
 import com.google.android.gms.maps.model.LatLng
 import com.team45.mysustainablecity.utils.MapLocation
 import com.team45.mysustainablecity.utils.Tag
 
 import com.team45.mysustainablecity.data.classes.Post
 import com.team45.mysustainablecity.data.classes.PostInfo
+import com.team45.mysustainablecity.data.classes.toPost
+import com.team45.mysustainablecity.data.remote.ChannelManager
 import com.team45.mysustainablecity.data.remote.SupabaseClientProvider
+import io.github.jan.supabase.functions.functions
+import io.github.jan.supabase.realtime.PostgresAction
 import io.ktor.client.call.body
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.decodeFromJsonElement
 
 
 class PostRep {
     private val client = SupabaseClientProvider.client
     val posts = MutableStateFlow(emptyList<PostInfo>())
+
+    private val scope = CoroutineScope(Dispatchers.IO)
+
+    // UI-facing list — automatically derived from posts
+    val uiPosts: StateFlow<List<Post>> = posts
+        .map { it.map { postInfo -> postInfo.toPost() } }
+        .stateIn(
+            scope = CoroutineScope(Dispatchers.IO + SupervisorJob()),
+            started = SharingStarted.Eagerly,
+            initialValue = emptyList()
+        )
+
 
     val allPosts: List<Post> = listOf(
 
@@ -583,11 +609,6 @@ class PostRep {
         ),
     )
 
-    // -------------------------------------------------------------------------
-    // Derived list of MapLocations — built from posts that have a position.
-    // This is the single conversion point; no duplicate data elsewhere.
-    // -------------------------------------------------------------------------
-
     val allMapLocations: List<MapLocation> = allPosts.mapNotNull { post ->
         post.position?.let { latLng ->
             MapLocation(
@@ -598,7 +619,90 @@ class PostRep {
             )
         }
     }
-    // Commented this out for now just so it would run for me
+
+    // In PostRep
+    val liveMapLocations: StateFlow<List<MapLocation>> = uiPosts
+        .map { postList ->
+            postList.mapNotNull { post ->
+                post.position?.let { latLng ->
+                    MapLocation(
+                        id = post.id,
+                        name = post.title,
+                        position = latLng,
+                        tags = post.tags,
+                        description = post.description,
+                    )
+                }
+            }
+        }
+        .stateIn(
+            scope = CoroutineScope(Dispatchers.IO + SupervisorJob()),
+            started = SharingStarted.Eagerly,
+            initialValue = emptyList()
+        )
+
+
+    suspend fun initialisePostsChannel() {
+        val channel = ChannelManager.subscribeToPostsChannel()
+
+        channel.collect { action ->
+            when (action) {
+                is PostgresAction.Insert -> {
+
+                    val postId = action.record["post_id"]?.toString()?.trim('"')
+                    if (postId != null) {
+                        val fullPost = fetchSinglePost(postId)
+                        if (fullPost != null) {
+                            posts.value += fullPost
+                        }
+                    }
+
+                }
+
+                is PostgresAction.Update -> { TODO() }
+
+                is PostgresAction.Delete -> {
+
+                    val postId = action.oldRecord["post_id"]?.toString()?.trim('"')
+                    posts.value = posts.value.filter { it.post.postId != postId }
+
+                }
+
+                else -> Log.e("PostRep", "Unknown action: $action")
+            }
+        }
+    }
+
+    suspend fun fetchAllPosts(latitude: Double?, longitude: Double?) {
+        val body = if (latitude != null && longitude != null) {
+            mapOf("latitude" to latitude, "longitude" to longitude)
+        } else {
+            mapOf("latitude" to null, "longitude" to null) // function will use default Newcastle coords
+        }
+
+        val response = client.functions.invoke(
+            "return_post_details",
+            body = body
+        )
+
+        val data = response.body<List<PostInfo>>()
+        Log.i("PostRep", "Posts fetched: $data")
+        posts.value = data
+    }
+
+    private suspend fun fetchSinglePost(postId: String): PostInfo? {
+        return try {
+            val response = client.functions.invoke(
+                "return_post_details",
+                body = mapOf("post_id" to postId)  // or use query params depending on your edge fn
+            )
+            response.body<List<PostInfo>>().firstOrNull()
+        } catch (e: Exception) {
+            Log.e("PostRep", "Failed to fetch post $postId: $e")
+            null
+        }
+    }
+
 
 //    suspend fun loadPosts(): List<PostInfo> {
 //        val response = client.functions.invoke("return_post_details")

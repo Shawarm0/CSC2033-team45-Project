@@ -116,7 +116,11 @@ fun DiscoverMap(
     val zoom by remember { derivedStateOf { cameraPositionState.position.zoom } }
     val bearing by remember { derivedStateOf { cameraPositionState.position.bearing } }
 
-    val visibleLocations by remember(searchText, activeFilters) {
+// Add this
+    val liveLocations by mapViewModel.postRep.liveMapLocations.collectAsState()
+
+// Replace the plain function call with derivedStateOf
+    val visibleLocations by remember(liveLocations, searchText, activeFilters) {
         derivedStateOf { mapViewModel.visibleLocations(searchText, activeFilters) }
     }
 

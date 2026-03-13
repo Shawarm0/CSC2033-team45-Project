@@ -31,9 +31,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -47,23 +45,17 @@ import com.team45.mysustainablecity.Screen
 import com.team45.mysustainablecity.data.classes.Post
 import com.team45.mysustainablecity.ui.components.FilterPill
 import com.team45.mysustainablecity.utils.Tag
-import com.team45.mysustainablecity.viewmodel.AuthViewModel
 import com.team45.mysustainablecity.viewmodel.DiscoverViewModel
 
 @Composable
 fun DiscoverScreen(
-    authViewModel: AuthViewModel,
     padding: PaddingValues,
     navController: NavController,
     discoverViewModel: DiscoverViewModel
 ) {
     val activeFilters by discoverViewModel.activeFilters.collectAsState()
     val likedPosts by discoverViewModel.likedPosts.collectAsState()
-    val likeCounts by discoverViewModel.likeCounts.collectAsState()
-
-    val visiblePosts by remember(activeFilters) {
-        derivedStateOf { discoverViewModel.visiblePosts(activeFilters) }
-    }
+    val visiblePosts = discoverViewModel.visiblePosts(activeFilters)
 
     Column(
         modifier = Modifier
@@ -114,7 +106,7 @@ fun DiscoverScreen(
                     PostCard(
                         post = post,
                         isLiked = likedPosts[post.id] == true,
-                        likeCount = likeCounts[post.id] ?: post.likes,
+                        likeCount = discoverViewModel.getLikeCount(post),  // ← replaces likeCounts[post.id] ?: post.likes
                         onLike = { discoverViewModel.toggleLike(post.id) },
                         onClick = {
                             navController.navigate(Screen.DiscoverPost.createRoute(post.id))

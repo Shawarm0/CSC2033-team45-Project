@@ -3,6 +3,7 @@ package com.team45.mysustainablecity.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
 import com.team45.mysustainablecity.reps.PostRep
 import com.team45.mysustainablecity.utils.LocationCluster
 import com.team45.mysustainablecity.utils.MapLocation
@@ -13,8 +14,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
-class MapViewModel(private val postRep: PostRep) : ViewModel() {
+class MapViewModel(val postRep: PostRep) : ViewModel() {
 
     // -------------------------------------------------------------------------
     // Search
@@ -32,6 +35,15 @@ class MapViewModel(private val postRep: PostRep) : ViewModel() {
         _searchText.value = text
         // If the user edits after committing, un-commit so filters stay ignored while typing
         if (_isSearchCommitted.value) _isSearchCommitted.value = false
+    }
+
+    init {
+        viewModelScope.launch {
+            postRep.fetchAllPosts(null, null)
+        }
+        viewModelScope.launch {
+            postRep.initialisePostsChannel()
+        }
     }
 
     fun onSearchCommit() {
@@ -72,7 +84,7 @@ class MapViewModel(private val postRep: PostRep) : ViewModel() {
         searchText: String = _searchText.value,
         activeFilters: Set<Tag> = _activeFilters.value,
     ): List<MapLocation> {
-        val all = postRep.allMapLocations
+        val all = postRep.liveMapLocations.value  // ← was allMapLocations
         return when {
             searchText.isNotBlank() -> all.filter {
                 it.name.contains(searchText.trim(), ignoreCase = true)

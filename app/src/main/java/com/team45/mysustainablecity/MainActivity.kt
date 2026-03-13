@@ -13,8 +13,6 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.Notifications
@@ -345,7 +343,6 @@ fun MainScaffold(
             }
             composable(Screen.Discover.route) {
                 DiscoverScreen(
-                    authViewModel,
                     padding,
                     innerNavController,
                     discoverViewModel

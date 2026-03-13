@@ -102,6 +102,7 @@ enum class Tag {
 
 }
 data class MapLocation(
+    val id: String = "",
     val name: String,
     val position: LatLng,
     val tags: List<Tag> = emptyList(),
@@ -229,7 +230,7 @@ fun LocationBottomSheet(
                 ) {
                     IconButton(onClick = {
                         onDismiss()
-                        navController.navigate(Screen.DiscoverPost.createRoute(location.name))
+                        navController.navigate(Screen.DiscoverPost.createRoute(location.id))
                     }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowForward,
