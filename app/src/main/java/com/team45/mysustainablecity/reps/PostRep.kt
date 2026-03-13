@@ -7,17 +7,20 @@ import com.team45.mysustainablecity.utils.Tag
 
 import com.team45.mysustainablecity.data.classes.Post
 import com.team45.mysustainablecity.data.classes.PostInfo
+import com.team45.mysustainablecity.data.classes.User
 import com.team45.mysustainablecity.data.classes.toPost
 import com.team45.mysustainablecity.data.remote.ChannelManager
 import com.team45.mysustainablecity.data.remote.SupabaseClientProvider
 import com.team45.mysustainablecity.viewmodel.AuthViewModel
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.functions.functions
+import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.realtime.PostgresAction
 import io.ktor.client.call.body
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -26,6 +29,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromJsonElement
+import kotlinx.serialization.json.jsonObject
 
 
 class PostRep {
@@ -613,16 +617,16 @@ class PostRep {
         ),
     )
 
-    val allMapLocations: List<MapLocation> = allPosts.mapNotNull { post ->
-        post.position?.let { latLng ->
-            MapLocation(
-                name = post.id,
-                position = latLng,
-                tags = post.tags,
-                description = post.description,
-            )
-        }
-    }
+//    val allMapLocations: List<MapLocation> = allPosts.mapNotNull { post ->
+//        post.position?.let { latLng ->
+//            MapLocation(
+//                name = post.id,
+//                position = latLng,
+//                tags = post.tags,
+//                description = post.description,
+//            )
+//        }
+//    }
 
     // In PostRep
     val liveMapLocations: StateFlow<List<MapLocation>> = uiPosts
@@ -663,7 +667,72 @@ class PostRep {
 
                 }
 
-                is PostgresAction.Update -> { TODO() }
+                is PostgresAction.Update -> {
+
+                    val postId = action.record["post_id"]?.toString()?.trim('"')
+                    val newStatus = action.record["status"]?.toString()?.trim('"')
+                    val oldStatus = action.oldRecord["status"]?.toString()?.trim('"')
+
+                    val becameApproved =
+                        (oldStatus == "awaiting" || oldStatus == "rejected") &&
+                                newStatus == "approved"
+
+                    val becameHidden =
+                        oldStatus == "approved" &&
+                                (newStatus == "awaiting" || newStatus == "rejected")
+
+                    ///// REPLACE THIS
+                    val userId = client.auth.currentUserOrNull()?.id ?: return@collect
+
+                    val user = client
+                        .from("users")
+                        .select {
+                            filter { eq("user_id", userId) }
+                        }
+                        .decodeSingle<User>()
+
+                    // REPLACE THIS
+
+                    val isModerator = user.role == "mod"
+
+                    if (postId == null) return@collect
+
+                    // Remove post if it became hidden and user is not a moderator
+                    if (becameHidden && !isModerator) {
+                        posts.value = posts.value.filter { it.post.postId != postId }
+                        return@collect
+                    }
+
+                    // Small delay to avoid Supabase replication race condition
+                    if (becameApproved) {
+                        delay(500)
+                    }
+
+                    val fullPost = if (isModerator) {
+                        fetchSinglePost(postId, "mod")
+                    } else {
+                        fetchSinglePost(postId)
+                    }
+
+                    Log.i("PostRep", "Post fetched: $fullPost")
+
+                    if (fullPost != null) {
+
+                        val list = posts.value.toMutableList()
+                        val index = list.indexOfFirst { it.post.postId == postId }
+
+                        if (index != -1) {
+                            // Update existing post
+                            list[index] = fullPost
+                        } else if (isModerator || becameApproved) {
+                            // Moderators add any missing post
+                            // Users add only when it becomes approved
+                            list.add(fullPost)
+                        }
+
+                        posts.value = list
+                    }
+                }
 
                 is PostgresAction.Delete -> {
 
@@ -694,11 +763,11 @@ class PostRep {
         posts.value = data
     }
 
-    private suspend fun fetchSinglePost(postId: String): PostInfo? {
+    private suspend fun fetchSinglePost(postId: String, mod: String? = null): PostInfo? {
         return try {
             val response = client.functions.invoke(
                 "return_post_details",
-                body = mapOf("post_id" to postId)  // or use query params depending on your edge fn
+                body = if (mod == null) mapOf("post_id" to postId) else mapOf("post_id" to postId, "role" to mod)
             )
             response.body<List<PostInfo>>().firstOrNull()
         } catch (e: Exception) {
@@ -707,4 +776,22 @@ class PostRep {
         }
     }
 
+    private suspend fun loadUser(id: String?): User? {
+        if (id == null) {
+            Log.e("UserRep", "Failed to load profile: User ID is null")
+            return null
+        }
+
+        Log.d("UserRep", "Loading profile for $id")
+
+        return client
+            .from("users")
+            .select {
+                filter { eq("user_id", id) }
+            }
+            .decodeSingleOrNull<User>()
+    }
+
 }
+
+
