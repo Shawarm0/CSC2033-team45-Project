@@ -686,7 +686,7 @@ class PostRep {
 
         val response = client.functions.invoke(
             "return_post_details",
-            body = body
+            body = body // Sends coordinates if provided as part of the request/invocation. Uses coordinates for post collection radius.
         )
 
         val data = response.body<List<PostInfo>>()
