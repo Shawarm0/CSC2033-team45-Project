@@ -39,7 +39,7 @@ data class Post(
     val body: String,
     val likes: Int,
     val comments: Int,
-    val tags: List<com.team45.mysustainablecity.utils.Tag> = emptyList(),
+    val tags: List<Tag> = emptyList(),
     val hasImage: Boolean = false,
     val imageUrl: String? = null,
     val position: LatLng? = null,

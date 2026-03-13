@@ -1,6 +1,7 @@
 package com.team45.mysustainablecity.viewmodel
 
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -12,6 +13,7 @@ import com.team45.mysustainablecity.utils.clusterLocations
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -39,10 +41,16 @@ class MapViewModel(val postRep: PostRep) : ViewModel() {
 
     init {
         viewModelScope.launch {
-            postRep.fetchAllPosts(null, null)
-        }
-        viewModelScope.launch {
-            postRep.initialisePostsChannel()
+            postRep.sessionFlow.collect { session ->
+                if (session != null) {
+                    try {
+                        postRep.fetchAllPosts(null, null)
+                        postRep.initialisePostsChannel()
+                    } catch (e: Exception) {
+                        Log.e("MapViewModel", "Error fetching posts", e)
+                    }
+                }
+            }
         }
     }
 

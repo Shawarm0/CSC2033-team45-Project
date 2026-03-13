@@ -10,6 +10,8 @@ import com.team45.mysustainablecity.data.classes.PostInfo
 import com.team45.mysustainablecity.data.classes.toPost
 import com.team45.mysustainablecity.data.remote.ChannelManager
 import com.team45.mysustainablecity.data.remote.SupabaseClientProvider
+import com.team45.mysustainablecity.viewmodel.AuthViewModel
+import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.functions.functions
 import io.github.jan.supabase.realtime.PostgresAction
 import io.ktor.client.call.body
@@ -31,6 +33,8 @@ class PostRep {
     val posts = MutableStateFlow(emptyList<PostInfo>())
 
     private val scope = CoroutineScope(Dispatchers.IO)
+
+    val sessionFlow = client.auth.sessionStatus
 
     // UI-facing list — automatically derived from posts
     val uiPosts: StateFlow<List<Post>> = posts
@@ -702,12 +706,5 @@ class PostRep {
             null
         }
     }
-
-
-//    suspend fun loadPosts(): List<PostInfo> {
-//        val response = client.functions.invoke("return_post_details")
-//        val data = response.body<List<PostInfo>>()
-//        return data
-//    }
 
 }
