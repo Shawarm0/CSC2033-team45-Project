@@ -652,6 +652,7 @@ class PostRep {
 
     suspend fun initialisePostsChannel() {
         val channel = ChannelManager.subscribeToPostsChannel()
+        UserRep.getSelf() // Using this method to refresh the currentUser property
 
         channel.collect { action ->
             when (action) {
@@ -691,14 +692,13 @@ class PostRep {
 //                        }
 //                        .decodeSingle<User>(
 
-                    val user = UserRep.getSelf()
-                    Log.d("PostRep", "User role: ${user?.role}")
+                    Log.d("PostRep", "User role: ${UserRep.currentUser.value?.role}")
 
-                    if (user == null) return@collect
+                    if (UserRep.currentUser.value == null) return@collect
 
                     // REPLACE THIS
 
-                    val isModerator = user.role == "mod"
+                    val isModerator = UserRep.currentUser.value?.role == "mod"
 
                     if (postId == null) return@collect
 
