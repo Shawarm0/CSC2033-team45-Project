@@ -12,14 +12,18 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlin.time.ExperimentalTime
 import kotlin.uuid.ExperimentalUuidApi
 
 @OptIn(ExperimentalTime::class)
-class UserRep {
+object UserRep {
     private val client = SupabaseClientProvider.client
+
+    private val _currentUser = MutableStateFlow<User?>(null)
+    val currentUser: StateFlow<User?> = _currentUser.asStateFlow()
 
 
     /**
@@ -152,10 +156,12 @@ class UserRep {
         val currentUser = client.auth.currentUserOrNull()
         if (currentUser != null) {
             Log.d("UserRep", "Found currently authenticated user ${currentUser.id}, returning...")
-            return loadUser(currentUser.id)
+            _currentUser.value = loadUser(currentUser.id)
+            return _currentUser.value
         } else {
             Log.d("UserRep", "No user currently authenticated")
-            return null
+            _currentUser.value = null
+            return _currentUser.value
         }
     }
 

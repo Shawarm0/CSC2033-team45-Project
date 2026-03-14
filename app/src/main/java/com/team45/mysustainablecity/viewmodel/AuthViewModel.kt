@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class AuthViewModel(
-    private val userRep: UserRep,
+    //private val userRep: UserRep,
 ): ViewModel() {
     private val client = SupabaseClientProvider.client
 
@@ -43,7 +43,7 @@ class AuthViewModel(
      */
     private fun observeAuthState() {
         viewModelScope.launch {
-            userRep.observeSession().collect { user:User? ->
+            UserRep.observeSession().collect { user:User? ->
                 _authState.value = user
                 _isAuthenticated.value = client.auth.currentSessionOrNull()?.user?.id != null
                 _isSessionReady.value = true
@@ -68,7 +68,7 @@ class AuthViewModel(
             _errorState.value = null
 
             try {
-                userRep.registerUser(email, password)
+                UserRep.registerUser(email, password)
                 Log.d("AuthViewModel", "register requested\n\n")
             } catch (e: AuthRestException) {
                 _errorState.value = e.message
@@ -87,7 +87,7 @@ class AuthViewModel(
             _errorState.value = null
 
             try {
-                userRep.loginUser(email, password)
+                UserRep.loginUser(email, password)
                 Log.d("AuthViewModel", "----- Login request sent -----\n\n")
             } catch (e: AuthRestException) {
                 Log.e("AuthViewModel", "----- Auth error: ${e.description} -----")
@@ -112,7 +112,7 @@ class AuthViewModel(
             _isLoading.value = true
 
             try {
-                val result = userRep.updateUser(user)
+                val result = UserRep.updateUser(user)
                 if (result) {
                     _authState.value = user
                     Log.d("AuthViewModel", "successfully updated user")
@@ -136,7 +136,7 @@ class AuthViewModel(
             _isLoading.value = true
 
             try {
-                val result = userRep.deleteUser(userId)
+                val result = UserRep.deleteUser(userId)
                 _operationSuccess.value = result
 
                 if (result) {
@@ -163,7 +163,7 @@ class AuthViewModel(
             _isLoading.value = true
             _errorState.value = null
             try {
-                val success = userRep.setUsername(username)
+                val success = UserRep.setUsername(username)
                 _operationSuccess.value = success
             } catch (e: Exception) {
                 // This now includes "Username already taken" from the unique constraint
@@ -182,7 +182,7 @@ class AuthViewModel(
     fun loadSelf() {
         viewModelScope.launch {
             try {
-                val user = userRep.getSelf()
+                val user = UserRep.getSelf()
                 _authState.value = user
                 _isAuthenticated.value = client.auth.currentSessionOrNull()?.user?.id != null
                 Log.d("AuthViewModel", "successfully loaded self $user")
@@ -204,7 +204,7 @@ class AuthViewModel(
             _errorState.value = null
 
             try {
-                userRep.logout()
+                UserRep.logout()
                 _isLoggedOut.value = true  // Signal immediately after logout call
             } catch (e: Exception) {
                 _errorState.value = e.message ?: "Logout failed"

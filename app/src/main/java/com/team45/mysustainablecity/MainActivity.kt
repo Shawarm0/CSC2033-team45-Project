@@ -54,7 +54,8 @@ import kotlinx.coroutines.runBlocking
 class MainActivity : ComponentActivity() {
 
     val appContainer = AppContainer()
-    val authViewModel = AuthViewModel(userRep = appContainer.userRepository)
+    //val authViewModel = AuthViewModel(userRep = appContainer.userRepository)
+    val authViewModel = AuthViewModel()
     val mapViewModel = MapViewModel(postRep = appContainer.postRepository)
     val discoverViewModel = DiscoverViewModel(postRep = appContainer.postRepository)
 

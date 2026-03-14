@@ -682,14 +682,19 @@ class PostRep {
                                 (newStatus == "awaiting" || newStatus == "rejected")
 
                     ///// REPLACE THIS
-                    val userId = client.auth.currentUserOrNull()?.id ?: return@collect
+//                    val userId = client.auth.currentUserOrNull()?.id ?: return@collect
+//
+//                    val user = client
+//                        .from("users")
+//                        .select {
+//                            filter { eq("user_id", userId) }
+//                        }
+//                        .decodeSingle<User>(
 
-                    val user = client
-                        .from("users")
-                        .select {
-                            filter { eq("user_id", userId) }
-                        }
-                        .decodeSingle<User>()
+                    val user = UserRep.getSelf()
+                    Log.d("PostRep", "User role: ${user?.role}")
+
+                    if (user == null) return@collect
 
                     // REPLACE THIS
 

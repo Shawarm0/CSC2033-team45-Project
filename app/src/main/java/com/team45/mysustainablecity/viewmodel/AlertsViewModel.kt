@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class AlertsViewModel (
-    private val userRep: UserRep,
+    //private val userRep: UserRep,
 ): ViewModel(){
     private val _alerts = MutableStateFlow<List<Alert>>(emptyList())
     val alerts: StateFlow<List<Alert>> = _alerts
@@ -28,7 +28,7 @@ class AlertsViewModel (
             _errorState.value = null
 
             try {
-                userRep.getAlerts(userId).collect { alertsList ->
+                UserRep.getAlerts(userId).collect { alertsList ->
                     Log.d("AlertsViewModel", "Successfully loaded alerts: $alertsList")
                     _alerts.value = alertsList
                 }
@@ -54,7 +54,7 @@ class AlertsViewModel (
             _errorState.value = null
 
             try {
-                val success = userRep.markAlertRead(alertId)
+                val success = UserRep.markAlertRead(alertId)
 
                 if (success) {
                     Log.d("AlertsViewModel", "Alert marked as read")
