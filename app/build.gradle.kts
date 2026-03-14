@@ -58,6 +58,9 @@ android {
 }
 
 dependencies {
+    // Supabase Version
+    var supabaseVersion = "3.0.0"
+    var ktorVersion = "3.0.0-rc-1"
     val mapsComposeVersion = "8.2.0"
     implementation("com.google.maps.android:maps-compose:$mapsComposeVersion")
     implementation("com.google.maps.android:maps-compose-utils:$mapsComposeVersion")
@@ -68,22 +71,16 @@ dependencies {
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
     testImplementation("io.mockk:mockk:1.13.7")
     testImplementation("app.cash.turbine:turbine:1.0.0")
+    testImplementation("io.ktor:ktor-client-mock:${ktorVersion}")
     implementation(libs.androidx.compose.animation.core)
-    // Supabase Version
-    var supabaseVersion = "3.0.0"
-    var ktorVersion = "3.0.0-rc-1"
     // Supabase Plugins
     implementation(platform("io.github.jan-tennert.supabase:bom:$supabaseVersion"))
     implementation("io.github.jan-tennert.supabase:postgrest-kt")
     implementation("io.github.jan-tennert.supabase:auth-kt")
     implementation("io.github.jan-tennert.supabase:realtime-kt")
     implementation("io.ktor:ktor-client-okhttp:$ktorVersion")
-
-
     // This is to get the icons imported
-
     implementation("androidx.compose.material:material-icons-extended:1.7.8")
-
     // This is for the navigation graph.
     val nav_version = "2.9.7"
     implementation("androidx.navigation:navigation-compose:$nav_version")

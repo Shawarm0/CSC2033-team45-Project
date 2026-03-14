@@ -15,8 +15,6 @@ import kotlinx.coroutines.launch
 class AuthViewModel(
     private val userRep: UserRep,
 ): ViewModel() {
-    private val client = SupabaseClientProvider.client
-
     private val _authState = MutableStateFlow<User?>(null)
     val authState: StateFlow<User?> = _authState
 
@@ -45,8 +43,7 @@ class AuthViewModel(
         viewModelScope.launch {
             userRep.observeSession().collect { user:User? ->
                 _authState.value = user
-                _isAuthenticated.value = client.auth.currentSessionOrNull()?.user?.id != null
-                _isSessionReady.value = true
+                _isAuthenticated.value = user != null
 
                 if (user != null) {
                     Log.d("AuthViewModel", "----- Authenticated user: $user -----")
@@ -184,7 +181,7 @@ class AuthViewModel(
             try {
                 val user = userRep.getSelf()
                 _authState.value = user
-                _isAuthenticated.value = client.auth.currentSessionOrNull()?.user?.id != null
+                _isAuthenticated.value = user!= null
                 Log.d("AuthViewModel", "successfully loaded self $user")
 
             } catch (e: Exception) {
